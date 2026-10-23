@@ -63,7 +63,7 @@ jobs:
       - name: Upload native title folder ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: T6-PS5-native-diagnostic-\${{ github.sha }}
+          name: T6-PS5-native-diagnostic-${{ github.sha }}
           path: |
             builder/dist/PPSA99873.zip
             builder/dist/PPSA99873.zip.sha256
