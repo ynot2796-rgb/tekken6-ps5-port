@@ -64,6 +64,58 @@ if "#if defined(__APPLE__) || defined(__PROSPERO__)" not in ctext:
     raise SystemExit("Could not enable ReXGlue chrono compatibility shim")
 chrono.write_text(ctext)
 
+
+# Replace Win32 VirtualQuery in the game's snapshot page walker with ReXGlue's
+# native memory-protection query on PS5. This preserves the committed/readable
+# page filter required by rollback snapshots rather than guessing from mincore.
+netplay = root / "src/t6_netplay_internal.h"
+ntext = netplay.read_text()
+if "#include <rex/memory/utils.h>" not in ntext:
+    marker = "#include <rex/ppc/func.h>\n"
+    if marker not in ntext:
+        raise SystemExit("Could not add ReXGlue memory-query header")
+    ntext = ntext.replace(marker, marker + "#include <rex/memory/utils.h>\n", 1)
+pattern = r"// Committed, readable host pages of guest range \[lo, hi\)\ntemplate <typename Fn>\nvoid ForEachCommitted\(uint32_t lo, uint32_t hi, const Fn& fn\) \{.*?\n\}"
+import re
+match = re.search(pattern, ntext, flags=re.S)
+if not match:
+    raise SystemExit("Could not locate snapshot committed-page walker")
+original = match.group(0)
+if "#if defined(__PROSPERO__)" not in original:
+    brace = original.index("{")
+    body = original[brace + 1:original.rfind("}")]
+    replacement = original[:brace + 1] + r"""
+#if defined(__PROSPERO__)
+  const uint64_t page_size = rex::memory::page_size();
+  uint64_t a = lo;
+  while (a < hi) {
+    const uint64_t page = a & ~(page_size - 1);
+    size_t region_length = 0;
+    rex::memory::PageAccess access = rex::memory::PageAccess::kNoAccess;
+    if (!rex::memory::QueryProtect(g_t6_membase + page, region_length, access) || !region_length) {
+      a = std::min<uint64_t>((page + page_size), hi);
+      continue;
+    }
+    const uint64_t region_end = page + region_length;
+    const uint64_t end = std::min<uint64_t>(region_end, hi);
+    const bool readable = access == rex::memory::PageAccess::kReadOnly ||
+                          access == rex::memory::PageAccess::kReadWrite ||
+                          access == rex::memory::PageAccess::kExecuteReadOnly ||
+                          access == rex::memory::PageAccess::kExecuteReadWrite;
+    if (readable && end > a) fn(static_cast<uint32_t>(a), static_cast<uint32_t>(end - a));
+    if (end <= a) {
+      a = std::min<uint64_t>((page + page_size), hi);
+    } else {
+      a = end;
+    }
+  }
+#else
+""" + body + r"""
+#endif
+}"""
+    ntext = ntext[:match.start()] + replacement + ntext[match.end():]
+netplay.write_text(ntext)
+
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
 
