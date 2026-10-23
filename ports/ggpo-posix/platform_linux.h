@@ -57,6 +57,7 @@ inline int t6_strncat_s(char *dst, size_t dstsz, const char *src, size_t count) 
 }
 #endif
 #ifndef FALSE
+#  define Sleep(milliseconds) ::usleep(static_cast<useconds_t>(milliseconds) * 1000u)
 #  define FALSE 0
 #endif
 #ifndef TRUE
