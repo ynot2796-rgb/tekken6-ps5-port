@@ -8,12 +8,13 @@
 - The public source does not include game code/data.
 - The public source README says the official server address, release API, pinned server certificate, and launcher artwork are not published.
 - The upstream CMake configuration links GGPO with Windows-specific libraries (`ws2_32`, `winmm`), uses a Xenos GPU plugin, applies x86-specific compiler flags, and configures Windows GUI entry points. This is not currently a PS5 build configuration.
+- Upstream releases currently list Native Online v2.3.5, published 21 October 2026. The selected target must track the current public source/features, not an older demo.
 
 ## Route selection
 
 **Primary route: native PS5 homebrew title.** The deliverable must be a real title folder registered by ShadowMountPlus, not a Windows executable or a payload-only demo.
 
-The target is the updated Native Online experience—not merely offline Tekken 6. Desired retained functionality includes rollback netplay, online sessions/lobbies and matchmaking, and newer features such as group lobbies/spectating where their code and compatible service protocol permit.
+The target is the updated Native Online experience—not merely offline Tekken 6. Desired retained functionality includes rollback netplay, online sessions/lobbies and matchmaking, and newer features such as practice-mode tools, group lobbies/spectating where their code and compatible service protocol permit.
 
 ## Work recorded
 
@@ -24,16 +25,19 @@ The target is the updated Native Online experience—not merely offline Tekken 6
 - `native/first_boot/main.c`: first-boot notification diagnostic source, explicitly not the game.
 - `native/first_boot/sce_sys/param.json`: proposed title metadata for the diagnostic.
 - `native/first_boot/make_icon.py`: deterministic icon generator.
-- `native/first_boot/BUILD_STATUS.md`: build record, ZIP SHA-256 and console test procedure.
+- `native/first_boot/BUILD_STATUS.md`: build record and console test results.
 - `.github/workflows/native-ps5-diagnostic.yml`: CI build/package route using the public ProsperoStore native-app build tooling pinned to commit `3290ee0d43c5e8ac49870e7c7e84639374a56bf1`.
 
 ## Current status — do not overstate
 
-The first native diagnostic title ZIP has been built successfully by CI and its contents were checked. SHA-256: `3b4b2eaa6ce4358fe8ef408bd8c43c5da64434804e7dec8a5b5db68b49c7fc74`. It contains `eboot.bin`, title metadata, icon, and the checksum-verified clean-room runtime; the unused helper is absent. **It has not yet been tested on a physical PS5**, so firmware 13.60 launch/registration is still unverified. See `native/first_boot/BUILD_STATUS.md`.
+Two native diagnostic builds were produced by CI. The first crashed on the user's PS5 with SIGSYS. The second build (`5363436d28564d56f03e89c76a34391b0d2e4621`) has now been tested by the user: it remains on a black screen without an immediate crash. This confirms the diagnostic process can stay running in the user's current setup; it does **not** confirm rendering, controller support, audio, game integration, or firmware-wide compatibility.
+
+The second diagnostic deliberately avoids sleep and returning from `main`, using a busy loop to isolate the earlier crash. Close it with the PS button; do not leave it running. Artifact run: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40035488841
+
+**The actual Tekken 6 Native Online port has not been built yet.** The next engineering phase is no longer diagnostic packaging: establish a real game-source build path and platform boundary for the ReXGlue runtime, graphics, input, audio, timing, and networking. Preserve the upstream GGPO rollback/session code and port it rather than replacing it with a separate netcode implementation.
 
 ## Unknown / blockers
 
-- Whether the resulting title launches on firmware 13.60 and the user's installed ShadowMountPlus version.
 - ReXGlue runtime and generated-game integration with the native app runtime is unverified.
 - A PS5-compatible graphics backend is a major unresolved task; upstream currently uses a Xenos GPU plugin.
 - Windows networking/timer/input/audio dependencies must be replaced or isolated without changing online protocol behavior.
@@ -43,7 +47,7 @@ The first native diagnostic title ZIP has been built successfully by CI and its 
 
 ## Acceptance criteria
 
-- Diagnostic title builds and launches from the home screen on firmware 13.60.
+- Diagnostic title builds and launches from the home screen on the user's firmware 13.60 setup.
 - Reproducible native PS5 build and launch instructions.
 - No game image, extracted assets, generated game code, credentials, private certificates, or proprietary Sony modules bundled in the public repository.
 - Correct controller input, audio, rendering, and stable gameplay timing.
