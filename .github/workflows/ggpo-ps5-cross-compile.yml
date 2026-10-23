@@ -51,7 +51,7 @@ jobs:
             -DT6_PS5_PORT_ROOT="$GITHUB_WORKSPACE" \
             -DT6_PS5_COMPAT_HEADER_CHECK=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build .work/ggpo-ps5-build --target ggpo_posix ps5_compat_header_check t6_common_header_check t6_netplay_header_check t6_netplay_source_check --parallel 2
+          cmake --build .work/ggpo-ps5-build --target ggpo_posix ps5_compat_header_check t6_common_header_check t6_netplay_header_check t6_host_modules_check --parallel 2
       - name: Upload PS5 GGPO archive
         uses: actions/upload-artifact@v4
         with:
