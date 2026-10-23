@@ -1,0 +1,56 @@
+name: GGPO PS5 cross-compile
+
+on:
+  push:
+    branches:
+      - main
+      - port/initial-scaffold
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ps5-static-library:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned-target host build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 llvm-18 llvm-18-dev llvm-18-tools cmake ninja-build make wget unzip rsync
+      - name: Fetch pinned Tekken and PS5 reference sources
+        run: bash tools/prepare_reference_sources.sh
+      - name: Export pinned PS5 SDK fork
+        env:
+          SDK_REVISION: b5efad528e0ac1b8289f39d72a0e890ff68ff0a6
+        run: |
+          set -euo pipefail
+          mkdir -p .work/ps5-sdk-git .work/ps5-sdk-export .work/ps5-sdk-cache
+          git -C .work/ps5-sdk-git init -q
+          git -C .work/ps5-sdk-git remote add origin https://github.com/mihawk-99/PS5_PayloadSDK.git
+          git -C .work/ps5-sdk-git fetch --depth=1 origin "$SDK_REVISION"
+          test "$(git -C .work/ps5-sdk-git rev-parse FETCH_HEAD)" = "$SDK_REVISION"
+          git -C .work/ps5-sdk-git archive FETCH_HEAD | tar -x -C .work/ps5-sdk-export
+          bash .work/ps5-sdk-export/platform/tools/setup-sdk.sh \
+            "$GITHUB_WORKSPACE/.work/ps5-sdk" "$SDK_REVISION" "$GITHUB_WORKSPACE/.work/ps5-sdk-cache"
+      - name: Cross-compile actual GGPO static library for PS5
+        env:
+          PS5_PAYLOAD_SDK: \${{ github.workspace }}/.work/ps5-sdk
+          LLVM_CONFIG: /usr/lib/llvm-18/bin/llvm-config
+          PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        run: |
+          set -euo pipefail
+          cmake -S tests/ggpo-posix -B .work/ggpo-ps5-build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/.work/reference-sources/prospero-recomp-reference/prospero/ps5-toolchain.cmake" \
+            -DPS5_PAYLOAD_SDK="$PS5_PAYLOAD_SDK" \
+            -DT6_REFERENCE_SOURCE="$GITHUB_WORKSPACE/.work/reference-sources/tekken6-native-online-source" \
+            -DT6_GGPO_BUILD_SMOKE=OFF \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build .work/ggpo-ps5-build --target ggpo_posix --parallel 2
+      - name: Upload PS5 GGPO archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ggpo-posix-ps5-static-library
+          path: .work/ggpo-ps5-build/libggpo_posix.a
+          if-no-files-found: error
