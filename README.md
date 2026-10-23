@@ -1,40 +1,59 @@
-# Tekken 6 Native Online — PS5 Compatibility Port
+# Tekken 6 Native Online — Native PS5 Port
 
-**Status: early feasibility work; not a playable port.**
+**Status: native-port research and scaffolding; not playable yet.** No PS5 executable or installable package has been validated on console.
 
-Goal: reuse the existing Tekken 6 Native Online project and determine the shortest viable route to run it on a jailbroken PS5 running firmware 13.60, while preserving online compatibility with the existing PC community wherever technically possible.
+## Goal
 
-## Strategy: reuse before rewrite
+Build a **native PS5 homebrew title** for Tekken 6 Native Online, preserving its existing GGPO rollback/netplay and updated online features where the platform and service dependencies permit. The final target is a home-screen app registered by ShadowMountPlus, like native apps distributed through ProsperoStore—not a Windows `.exe`, a renamed file, or a payload-only demo.
 
-First test the existing Windows application through MihawkOS, with Prospero Win as a secondary compatibility option. MihawkOS documents Wine/Proton, DXVK and VKD3D-Proton support, but this does not guarantee compatibility with the project's custom Xenos graphics backend or Qt launcher. If compatibility fails, port only the unsupported platform layers. Do not rewrite the game logic or GGPO rollback code unless testing proves a change is necessary.
+## Native PS5 route
 
-See [the native PS5 homebrew port plan](docs/NATIVE_PS5_HOMEBREW_PORT.md) for the preferred long-term direction, plus [the MihawkOS evaluation](docs/MIHAWKOS_EVALUATION.md) and [the Prospero Win evaluation](docs/PROSPERO_WIN_EVALUATION.md) as fallback experiments.
+The chosen route is a real native title build:
+- Evaluate the public [ps5link SDK](https://github.com/Rufidj/ps5link-sdk) and [PS5 payload SDK](https://github.com/ps5-payload-dev/sdk) for toolchain, linker and platform interfaces.
+- Follow the native-title structure and packaging requirements documented in [PS5 title packaging and boot](docs/PS5_TITLE_PACKAGING_AND_BOOT.md).
+- Build a minimal diagnostic title first to prove title metadata, executable/runtime packaging, ShadowMountPlus registration, and launch on firmware 13.60.
+- Only after that proof, port the game runtime, rendering, input, audio, timing, filesystem and networking dependencies.
+- Preserve upstream rollback/session/snapshot behavior and validate PC cross-play against the matching upstream version before claiming it works.
 
-## Upstream projects
+## Research and port notes
+
+- [Native PS5 homebrew port plan](docs/NATIVE_PS5_HOMEBREW_PORT.md)
+- [Source portability audit](docs/NATIVE_PS5_SOURCE_AUDIT.md)
+- [Online portability notes](docs/ONLINE_PORTABILITY_NOTES.md)
+- [PS5 title packaging and boot requirements](docs/PS5_TITLE_PACKAGING_AND_BOOT.md)
+- [Current porting status and blockers](PORTING_STATUS.md)
+
+## Upstream
 
 - Native Online source: https://github.com/Ekspym/tekken6-native-online-source
-- Native Online releases: https://github.com/Ekspym/Tekken6-native-online/releases (latest checked: v2.4.2, published Oct 23, 2026; includes upstream Windows package and patch)
+- Native Online releases: https://github.com/Ekspym/Tekken6-native-online/releases
 - ReXGlue SDK: https://github.com/rexglue/rexglue-sdk
 - Original recompilation work: https://github.com/mahmoud-mess/tekken6-recomp
-- PS5 homebrew SDK: https://github.com/ps5-payload-dev/sdk
-- MihawkOS: https://github.com/mihawk-99/PS5_MihawkOS
+- Native title linker/SDK: https://github.com/Rufidj/ps5link-sdk
+- ShadowMountPlus: https://github.com/drakmor/ShadowMountPlus
+- ProsperoStore: https://github.com/darkxex/ProsperoStore
 
-## Confirmed constraints
+## Important technical facts
 
-The upstream project is a native Windows PC port using ReXGlue static recompilation, a Xenos graphics backend, a GGPO fork, and a Qt/Win32 launcher. It does not include game code/data; the player generates the game from their own compatible Tekken 6 Xbox 360 copy.
+The upstream build is Windows-oriented: it links a GGPO fork against Windows socket/timing libraries, uses the Xenos GPU plugin, has Windows GUI startup configuration, and applies CPU/compiler flags that need review for the PS5 toolchain. Its source has reusable session, rollback, snapshot and controller integration, but those do not become PS5-compatible merely by recompiling.
 
-The upstream README says official matchmaking server configuration and the pinned certificate are not published in the public source. Running the game on PS5 therefore does not by itself prove it can use the same official lobbies. Preserve protocol/version behavior and do not guess endpoints or disable TLS validation.
+The public upstream source README says the official lobby endpoint and pinned certificate configuration are not published. Official matchmaking and cross-play are therefore open issues, not guaranteed features.
+
+A native title folder commonly contains `eboot.bin`, `sce_sys/param.json`, an icon and required runtime files. The ps5link SDK documents a required signed `sce_module/libc.prx` compatible with the target firmware and states that this Sony-owned module cannot be distributed. A build artifact must not be called install-ready until its runtime requirements are handled correctly and it has actually launched on the user's firmware.
+
+## Firmware target and honest status
+
+Target console: jailbroken PS5 firmware **13.60**. Some public SDK projects document tests on older firmware only, so 13.60 compatibility must be tested directly. ShadowMountPlus registration is not the same as successful launch.
+
+No game image, extracted game assets, generated proprietary game code, credentials, private certificates, server secrets, or Sony runtime modules are included in this repository.
 
 ## Milestones
 
-1. **Compatibility-runtime test:** test the Windows build through MihawkOS first, then Prospero Win if needed. Record the exact runtime version, firmware, and error/log output.
-2. **Build/toolchain test:** establish a reproducible build of the public components and identify what requires the user's own game files.
-3. **Game launch:** test the existing game build before replacing any components.
-4. **Input/audio/performance:** verify DualSense input, sound, stable timing and rendering.
-5. **Online:** verify official service access and test cross-play with an unmodified PC client, only where permitted by the service operator.
-
-## Current status
-
-The upstream project published v2.4.2 on Oct 23, 2026, with a Windows package and a separate patch. This is the most practical baseline to test before attempting a full source build; it is not a PS5 build and is not yet confirmed to run under MihawkOS. A GitHub Actions Windows launcher build check is running to validate the public launcher build path, but a successful launcher build would not mean the game itself has been built. Track the run at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/workflows/windows-launcher-build.yml.
-
-No PS5 executable has been built or tested. The code in this repository is an initial porting scaffold, not the game. The user currently has source code only, so a Windows build and the user's own compatible game files are still needed before an on-console game test. No copyrighted game files, credentials, server secrets, or guessed server addresses are included.
+1. [ ] Native build environment and dependency versions pinned.
+2. [ ] Minimal native diagnostic title built with valid metadata and runtime dependencies.
+3. [ ] Diagnostic title registers and launches through ShadowMountPlus on firmware 13.60.
+4. [ ] Portability layer for sockets, timing, threads, input, audio and filesystem.
+5. [ ] Native rendering proof, then game runtime/ReXGlue integration.
+6. [ ] Offline gameplay, deterministic rollback and performance tests.
+7. [ ] Online service configuration and protocol compatibility validated legitimately.
+8. [ ] Cross-play test against the matching PC Native Online release.
