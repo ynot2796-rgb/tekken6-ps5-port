@@ -39,6 +39,13 @@ jobs:
           cp native/first_boot/make_icon.py builder/native/first_boot/make_icon.py
           python3 builder/native/first_boot/make_icon.py builder/native/first_boot/sce_sys/icon0.png
 
+      - name: Fetch and verify the public clean-room runtime
+        run: |
+          mkdir -p builder/runtime
+          wget -q https://github.com/darkxex/ProsperoStore/releases/latest/download/PPSA99000.zip -O /tmp/prosperostore.zip
+          unzip -p /tmp/prosperostore.zip PPSA99000/sce_module/libc.prx > builder/runtime/libc.prx
+          (cd builder/runtime && sha256sum --check --strict libc.prx.sha256)
+
       - name: Build and package native title
         env:
           APP_SOURCE_DIR: native/first_boot
@@ -51,7 +58,7 @@ jobs:
           USE_CCACHE: "0"
         run: |
           rm -f builder/.env
-          make -C builder APP_DEFINITIONS= APP_INCLUDE_PATHS= APP_STATIC_ARCHIVES= APP_IMPORT_STUBS= APP_WRAP_SYMBOLS= APP_RUNTIME_MODULES= APP_LAPY_HELPER=0 PACBREW_PACKAGES= PACBREW_INCLUDE_PATHS= PACBREW_STATIC_ARCHIVES= APP_ROOT_FILES= app
+          make -C builder -o runtime/libc.prx APP_DEFINITIONS= APP_INCLUDE_PATHS= APP_STATIC_ARCHIVES= APP_IMPORT_STUBS= APP_WRAP_SYMBOLS= APP_RUNTIME_MODULES= APP_LAPY_HELPER=0 PACBREW_PACKAGES= PACBREW_INCLUDE_PATHS= PACBREW_STATIC_ARCHIVES= APP_ROOT_FILES= app
           test -s builder/dist/PPSA99873/eboot.bin
           test -s builder/dist/PPSA99873/sce_module/libc.prx
           test -s builder/dist/PPSA99873/sce_sys/param.json
