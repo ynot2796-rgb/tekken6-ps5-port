@@ -23,7 +23,7 @@ jobs:
           path: upstream
 
       - name: Set up Qt 6.12 for MSVC 2022
-        uses: jurplel/setup-qt@v4
+        uses: jurplel/install-qt-action@v4
         with:
           version: "6.12.0"
           host: windows
