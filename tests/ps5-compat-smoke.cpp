@@ -26,7 +26,7 @@ int main() {
         return 4;
     }
     if (_byteswap_ushort(0x1234u) != 0x3412u) {
-        std::fprintf(stderr, "16-bit byte-swap shim failed\\n");
+        std::fprintf(stderr, "16-bit byte-swap shim failed\n");
         return 5;
     }
     if (_byteswap_uint64(0x0102030405060708ULL) != 0x0807060504030201ULL) {
@@ -35,13 +35,13 @@ int main() {
     }
     FILE *file = nullptr;
     if (fopen_s(&file, "/tmp/t6-ps5-compat-smoke.tmp", "w") != 0 || !file) {
-        std::fprintf(stderr, "secure file-open shim failed\\n");
+        std::fprintf(stderr, "secure file-open shim failed\n");
         return 7;
     }
     std::fputs("ok", file);
     std::fclose(file);
     if (!MoveFileExA("/tmp/t6-ps5-compat-smoke.tmp", "/tmp/t6-ps5-compat-smoke.out", MOVEFILE_REPLACE_EXISTING)) {
-        std::fprintf(stderr, "atomic file-replace shim failed\\n");
+        std::fprintf(stderr, "atomic file-replace shim failed\n");
         return 8;
     }
     std::remove("/tmp/t6-ps5-compat-smoke.out");
