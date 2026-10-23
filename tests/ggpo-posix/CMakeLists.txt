@@ -5,19 +5,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 if(NOT DEFINED T6_REFERENCE_SOURCE)
   message(FATAL_ERROR "Set T6_REFERENCE_SOURCE to the pinned Native Online source checkout")
-
-  add_library(t6_netplay_source_check OBJECT "${T6_REFERENCE_SOURCE}/src/t6_netplay.cpp")
-  target_include_directories(t6_netplay_source_check PRIVATE
-    "${T6_PS5_PORT_ROOT}/include/ps5_compat"
-    "${T6_PS5_PORT_ROOT}/include"
-    "${T6_REFERENCE_SOURCE}/src"
-    "${T6_REFERENCE_SOURCE}/third_party/ggpo/src/include"
-    "${T6_REFERENCE_SOURCE}/third_party/ggpo/src/lib/ggpo"
-    "${T6_REFERENCE_SOURCE}/../rexglue-sdk/include"
-    "${T6_REFERENCE_SOURCE}/../fmt/include"
-    "${T6_REFERENCE_SOURCE}/../simde"
-    "${T6_REFERENCE_SOURCE}/../spdlog/include"
-  )
 endif()
 set(GGPO_SOURCE "${T6_REFERENCE_SOURCE}/third_party/ggpo/src")
 include("${GGPO_SOURCE}/CMakeSources.cmake")
@@ -42,19 +29,7 @@ if(T6_PS5_COMPAT_HEADER_CHECK)
   if(NOT DEFINED T6_PS5_PORT_ROOT)
     message(FATAL_ERROR "Set T6_PS5_PORT_ROOT to the port repository root")
   endif()
-  add_library(ps5_compat_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/ps5-compat-smoke.cpp")
-  target_include_directories(ps5_compat_header_check PRIVATE
-    "${T6_PS5_PORT_ROOT}/include/ps5_compat"
-    "${T6_PS5_PORT_ROOT}/include"
-  )
-  add_library(t6_common_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/t6-common-header-smoke.cpp")
-  target_include_directories(t6_common_header_check PRIVATE
-    "${T6_PS5_PORT_ROOT}/include/ps5_compat"
-    "${T6_PS5_PORT_ROOT}/include"
-    "${T6_REFERENCE_SOURCE}/src"
-  )
-  add_library(t6_netplay_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/t6-netplay-header-smoke.cpp")
-  target_include_directories(t6_netplay_header_check PRIVATE
+  set(T6_PS5_COMMON_INCLUDES
     "${T6_PS5_PORT_ROOT}/include/ps5_compat"
     "${T6_PS5_PORT_ROOT}/include"
     "${T6_REFERENCE_SOURCE}/src"
@@ -65,4 +40,12 @@ if(T6_PS5_COMPAT_HEADER_CHECK)
     "${T6_REFERENCE_SOURCE}/../simde"
     "${T6_REFERENCE_SOURCE}/../spdlog/include"
   )
+  add_library(ps5_compat_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/ps5-compat-smoke.cpp")
+  target_include_directories(ps5_compat_header_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
+  add_library(t6_common_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/t6-common-header-smoke.cpp")
+  target_include_directories(t6_common_header_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
+  add_library(t6_netplay_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/t6-netplay-header-smoke.cpp")
+  target_include_directories(t6_netplay_header_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
+  add_library(t6_netplay_source_check OBJECT "${T6_REFERENCE_SOURCE}/src/t6_netplay.cpp")
+  target_include_directories(t6_netplay_source_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
 endif()
