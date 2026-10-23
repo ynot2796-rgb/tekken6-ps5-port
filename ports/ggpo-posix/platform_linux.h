@@ -43,6 +43,17 @@ public:
 #  define vsprintf_s(buffer, size, fmt, args) std::vsnprintf((buffer), (size), (fmt), (args))
 #  define strcpy_s(dst, src) std::snprintf((dst), sizeof(dst), "%s", (src))
 #  define fopen_s(out, path, mode) ((*(out) = std::fopen((path), (mode))) == nullptr ? errno : 0)
+#  define strncat_s(dst, dstsz, src, count) t6_strncat_s((dst), (dstsz), (src), (count))
+inline int t6_strncat_s(char *dst, size_t dstsz, const char *src, size_t count) {
+    if (!dst || !src || dstsz == 0) return EINVAL;
+    const size_t used = std::strlen(dst);
+    if (used >= dstsz) { dst[dstsz - 1] = '\0'; return ERANGE; }
+    const size_t available = dstsz - used - 1;
+    const size_t copied = count < available ? count : available;
+    std::strncat(dst, src, copied);
+    dst[used + copied] = '\0';
+    return copied == count ? 0 : ERANGE;
+}
 #endif
 #ifndef FALSE
 #  define FALSE 0
