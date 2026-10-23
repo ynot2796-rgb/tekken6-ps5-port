@@ -106,7 +106,7 @@ inline void Sleep(DWORD milliseconds) {
 inline DWORD GetLastError() { return static_cast<DWORD>(errno); }
 inline DWORD GetCurrentProcessId() { return static_cast<DWORD>(::getpid()); }
 inline HANDLE GetCurrentProcess() { return reinterpret_cast<HANDLE>(static_cast<uintptr_t>(-1)); }
-inline HANDLE GetCurrentThread() { return reinterpret_cast<HANDLE>(static_cast<uintptr_t>(::pthread_self())); }
+inline HANDLE GetCurrentThread() { return nullptr; }
 
 /* Remote-thread sampling is a Windows-only optional profiling feature. */
 inline BOOL DuplicateHandle(HANDLE, HANDLE, HANDLE, HANDLE *target, DWORD, BOOL, DWORD) {
