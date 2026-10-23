@@ -38,6 +38,18 @@ public:
     static bool GetConfigBool(const char *name);
 };
 
+
+inline int t6_recvfrom_compat(SOCKET socket, char *buffer, int length, int flags,
+                              struct sockaddr *address, int *address_length) {
+    if (!address_length) { errno = EINVAL; return SOCKET_ERROR; }
+    socklen_t native_length = static_cast<socklen_t>(*address_length);
+    const ssize_t result = ::recvfrom(socket, buffer, static_cast<size_t>(length),
+                                      flags, address, &native_length);
+    *address_length = static_cast<int>(native_length);
+    return static_cast<int>(result);
+}
+#define recvfrom t6_recvfrom_compat
+
 /* The fork uses MSVC secure-CRT helpers. Keep equivalent bounded POSIX calls. */
 #ifndef _MSC_VER
 #  define sprintf_s(buffer, size, ...) std::snprintf((buffer), (size), __VA_ARGS__)
