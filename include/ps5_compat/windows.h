@@ -103,6 +103,13 @@ inline void Sleep(DWORD milliseconds) {
                  static_cast<long>((milliseconds % 1000) * 1000000UL)};
     while (::nanosleep(&req, &req) != 0 && errno == EINTR) {}
 }
+
+inline int fopen_s(FILE **file, const char *path, const char *mode) {
+    if (!file || !path || !mode) { errno = EINVAL; return EINVAL; }
+    *file = std::fopen(path, mode);
+    return *file ? 0 : (errno ? errno : 1);
+}
+
 inline DWORD GetLastError() { return static_cast<DWORD>(errno); }
 inline DWORD GetCurrentProcessId() { return static_cast<DWORD>(::getpid()); }
 inline HANDLE GetCurrentProcess() { return reinterpret_cast<HANDLE>(static_cast<uintptr_t>(-1)); }
