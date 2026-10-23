@@ -8,6 +8,7 @@ if(NOT DEFINED T6_REFERENCE_SOURCE)
 endif()
 set(GGPO_SOURCE "${T6_REFERENCE_SOURCE}/third_party/ggpo/src")
 include("${GGPO_SOURCE}/CMakeSources.cmake")
+list(TRANSFORM GGPO_LIB_SRC PREPEND "${GGPO_SOURCE}/")
 add_library(ggpo_posix_compile OBJECT ${GGPO_LIB_SRC})
 target_include_directories(ggpo_posix_compile PRIVATE
   "${GGPO_SOURCE}/include"
