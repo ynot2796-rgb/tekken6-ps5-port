@@ -1,6 +1,6 @@
 # Tekken 6 Native Online — Native PS5 Port
 
-**Status: native-port research and scaffolding; not playable yet.** No PS5 executable or installable package has been validated on console.
+**Status: native diagnostic package built; Tekken 6 itself is not ported yet.** The first native title ZIP has passed CI packaging checks but has not been tested on a physical PS5.
 
 ## Goal
 
@@ -11,7 +11,7 @@ Build a **native PS5 homebrew title** for Tekken 6 Native Online, preserving its
 The chosen route is a real native title build:
 - Evaluate the public [ps5link SDK](https://github.com/Rufidj/ps5link-sdk) and [PS5 payload SDK](https://github.com/ps5-payload-dev/sdk) for toolchain, linker and platform interfaces.
 - Follow the native-title structure and packaging requirements documented in [PS5 title packaging and boot](docs/PS5_TITLE_PACKAGING_AND_BOOT.md).
-- Build a minimal diagnostic title first to prove title metadata, executable/runtime packaging, ShadowMountPlus registration, and launch on firmware 13.60.
+- A first-boot diagnostic title ZIP is built. See [build record and install test](native/first_boot/BUILD_STATUS.md); the next validation is launching it through ShadowMountPlus on firmware 13.60.
 - Only after that proof, port the game runtime, rendering, input, audio, timing, filesystem and networking dependencies.
 - Preserve upstream rollback/session/snapshot behavior and validate PC cross-play against the matching upstream version before claiming it works.
 
@@ -21,6 +21,7 @@ The chosen route is a real native title build:
 - [Source portability audit](docs/NATIVE_PS5_SOURCE_AUDIT.md)
 - [Online portability notes](docs/ONLINE_PORTABILITY_NOTES.md)
 - [PS5 title packaging and boot requirements](docs/PS5_TITLE_PACKAGING_AND_BOOT.md)
+- [First-boot diagnostic build record](native/first_boot/BUILD_STATUS.md)
 - [Current porting status and blockers](PORTING_STATUS.md)
 
 ## Upstream
