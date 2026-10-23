@@ -29,9 +29,9 @@ if(T6_PS5_COMPAT_HEADER_CHECK)
   if(NOT DEFINED T6_PS5_PORT_ROOT)
     message(FATAL_ERROR "Set T6_PS5_PORT_ROOT to the port repository root")
   endif()
-  add_library(ps5_compat_header_check OBJECT "\${T6_PS5_PORT_ROOT}/tests/ps5-compat-smoke.cpp")
+  add_library(ps5_compat_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/ps5-compat-smoke.cpp")
   target_include_directories(ps5_compat_header_check PRIVATE
-    "\${T6_PS5_PORT_ROOT}/include/ps5_compat"
-    "\${T6_PS5_PORT_ROOT}/include"
+    "${T6_PS5_PORT_ROOT}/include/ps5_compat"
+    "${T6_PS5_PORT_ROOT}/include"
   )
 endif()
