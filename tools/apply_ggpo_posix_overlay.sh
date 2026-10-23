@@ -39,6 +39,11 @@ proto = source / "third_party/ggpo/src/lib/ggpo/network/udp_proto.cpp"
 text = proto.read_text()
 text = text.replace(".S_un.S_addr", ".s_addr")
 proto.write_text(text)
+
+sync_test = source / "third_party/ggpo/src/lib/ggpo/backends/synctest.cpp"
+text = sync_test.read_text()
+text = text.replace(r"synclogs\\", "synclogs/")
+sync_test.write_text(text)
 PY
 
 echo "Applied POSIX GGPO platform, public-header, and poll overlay to $GGPO"
