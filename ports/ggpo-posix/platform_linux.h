@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cerrno>
+#include <climits>
 #include <cstdlib>
 #include <cstring>
 #include <strings.h>
