@@ -8,7 +8,7 @@ Goal: reuse the existing Tekken 6 Native Online project and determine the shorte
 
 First test the existing Windows application through MihawkOS, with Prospero Win as a secondary compatibility option. MihawkOS documents Wine/Proton, DXVK and VKD3D-Proton support, but this does not guarantee compatibility with the project's custom Xenos graphics backend or Qt launcher. If compatibility fails, port only the unsupported platform layers. Do not rewrite the game logic or GGPO rollback code unless testing proves a change is necessary.
 
-See [the MihawkOS evaluation](docs/MIHAWKOS_EVALUATION.md) and [the Prospero Win evaluation](docs/PROSPERO_WIN_EVALUATION.md).
+See [the native PS5 homebrew port plan](docs/NATIVE_PS5_HOMEBREW_PORT.md) for the preferred long-term direction, plus [the MihawkOS evaluation](docs/MIHAWKOS_EVALUATION.md) and [the Prospero Win evaluation](docs/PROSPERO_WIN_EVALUATION.md) as fallback experiments.
 
 ## Upstream projects
 
