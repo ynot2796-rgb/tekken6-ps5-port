@@ -34,4 +34,10 @@ if(T6_PS5_COMPAT_HEADER_CHECK)
     "${T6_PS5_PORT_ROOT}/include/ps5_compat"
     "${T6_PS5_PORT_ROOT}/include"
   )
+  add_library(t6_common_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/t6-common-header-smoke.cpp")
+  target_include_directories(t6_common_header_check PRIVATE
+    "${T6_PS5_PORT_ROOT}/include/ps5_compat"
+    "${T6_PS5_PORT_ROOT}/include"
+    "${T6_REFERENCE_SOURCE}/src"
+  )
 endif()
