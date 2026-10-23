@@ -5,12 +5,44 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE="${1:-$ROOT/.work/reference-sources/tekken6-native-online-source}"
 export T6_PS5_PORT_ROOT="$ROOT"
+SDK="${T6_REXGLUE_SDK_ROOT:-$SOURCE/../rexglue-sdk}"
+test -f "$SDK/include/rex/platform.h" || { echo "Missing pinned ReXGlue SDK at $SDK" >&2; exit 2; }
 test -f "$SOURCE/CMakeLists.txt" || { echo "Missing Native Online source at $SOURCE" >&2; exit 2; }
 bash "$ROOT/tools/apply_ggpo_posix_overlay.sh" "$SOURCE"
-python3 - "$SOURCE" <<'PY'
+python3 - "$SOURCE" "$SDK" <<'PY'
 from pathlib import Path
 import sys
 root = Path(sys.argv[1])
+sdk = Path(sys.argv[2])
+
+# The Native Online source targets ReXGlue 0.10; add the Prospero platform
+# switch to that exact SDK instead of replacing it with the older 0.8 SDK in
+# the separate PS5 example project.
+platform = sdk / "include/rex/platform.h"
+ptext = platform.read_text()
+if "#if defined(__PROSPERO__)" not in ptext:
+    marker = "#if defined(TARGET_OS_MAC) && TARGET_OS_MAC\n"
+    if marker not in ptext:
+        raise SystemExit("Could not locate ReXGlue platform selection")
+    ptext = ptext.replace(marker, "#if defined(__PROSPERO__)\n#define REX_PLATFORM_PROSPERO 1\n#elif defined(TARGET_OS_MAC) && TARGET_OS_MAC\n", 1)
+if "#ifndef REX_PLATFORM_PROSPERO" not in ptext:
+    marker = "#ifndef REX_PLATFORM_MAC\n"
+    if marker not in ptext:
+        raise SystemExit("Could not locate ReXGlue platform macro defaults")
+    ptext = ptext.replace(marker, "#ifndef REX_PLATFORM_PROSPERO\n#define REX_PLATFORM_PROSPERO 0\n#endif\n" + marker, 1)
+platform.write_text(ptext)
+
+# The PS5 SDK libc++ lacks floating-point std::from_chars. ReXGlue already
+# has a C-locale fallback for AppleClang; enable the same fallback on Prospero.
+numeric = sdk / "include/rex/string/numeric.h"
+ntext = numeric.read_text()
+ntext = ntext.replace("#if REX_PLATFORM_MAC\n#include <locale.h>", "#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO\n#include <locale.h>", 1)
+ntext = ntext.replace("#if REX_PLATFORM_MAC\ntemplate <typename T>\ninline std::from_chars_result portable_float_from_chars", "#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO\ntemplate <typename T>\ninline std::from_chars_result portable_float_from_chars", 1)
+ntext = ntext.replace("#if REX_PLATFORM_MAC\n    auto [p, error] = portable_float_from_chars", "#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO\n    auto [p, error] = portable_float_from_chars", 1)
+if "REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO" not in ntext:
+    raise SystemExit("Could not enable ReXGlue floating-point parser fallback")
+numeric.write_text(ntext)
+
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
 
