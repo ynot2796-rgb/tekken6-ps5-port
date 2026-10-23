@@ -49,5 +49,6 @@ if(T6_PS5_COMPAT_HEADER_CHECK)
     "${T6_REFERENCE_SOURCE}/third_party/ggpo/src/lib/ggpo"
     "${T6_REFERENCE_SOURCE}/../rexglue-sdk/include"
     "${T6_REFERENCE_SOURCE}/../fmt/include"
+    "${T6_REFERENCE_SOURCE}/../simde"
   )
 endif()
