@@ -13,7 +13,7 @@ See [the MihawkOS evaluation](docs/MIHAWKOS_EVALUATION.md) and [the Prospero Win
 ## Upstream projects
 
 - Native Online source: https://github.com/Ekspym/tekken6-native-online-source
-- Native Online releases: https://github.com/Ekspym/Tekken6-native-online/releases
+- Native Online releases: https://github.com/Ekspym/Tekken6-native-online/releases (latest checked: v2.4.2, published Oct 23, 2026; includes upstream Windows package and patch)
 - ReXGlue SDK: https://github.com/rexglue/rexglue-sdk
 - Original recompilation work: https://github.com/mahmoud-mess/tekken6-recomp
 - PS5 homebrew SDK: https://github.com/ps5-payload-dev/sdk
@@ -34,5 +34,7 @@ The upstream README says official matchmaking server configuration and the pinne
 5. **Online:** verify official service access and test cross-play with an unmodified PC client, only where permitted by the service operator.
 
 ## Current status
+
+The upstream project published v2.4.2 on Oct 23, 2026, with a Windows package and a separate patch. This is the most practical baseline to test before attempting a full source build; it is not a PS5 build and is not yet confirmed to run under MihawkOS. A GitHub Actions Windows launcher build check is running to validate the public launcher build path, but a successful launcher build would not mean the game itself has been built. Track the run at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/workflows/windows-launcher-build.yml.
 
 No PS5 executable has been built or tested. The code in this repository is an initial porting scaffold, not the game. The user currently has source code only, so a Windows build and the user's own compatible game files are still needed before an on-console game test. No copyrighted game files, credentials, server secrets, or guessed server addresses are included.
