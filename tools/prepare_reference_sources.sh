@@ -7,6 +7,8 @@ ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 DEST="${T6_REFERENCE_ROOT:-$ROOT/.work/reference-sources}"
 TEKKEN_REV=24db272e03ab0e6c35f22abea519e76b22ecf450
 PROSPERO_BUILDER_REV=59e7086b8f920f70630d9461d357d0f6428fe4cc
+REXGLUE_REV=f5337cdc947ff6d4c4196737e2c807a48f2a1fc2
+FMT_REV=407c905e45ad75fc29bf0f9bb7c5c2fd3475976f
 
 checkout_pin() {
     local name="$1" url="$2" revision="$3"
@@ -37,22 +39,34 @@ mkdir -p "$DEST"
         https://github.com/Ekspym/tekken6-native-online-source.git "$TEKKEN_REV"
     checkout_pin prospero-recomp-reference \
         https://github.com/LoZazaMastro/TheSimpsonsGame-PS5-Builder.git "$PROSPERO_BUILDER_REV"
+    checkout_pin rexglue-sdk \
+        https://github.com/rexglue/rexglue-sdk.git "$REXGLUE_REV"
+    checkout_pin fmt \
+        https://github.com/fmtlib/fmt.git "$FMT_REV"
 } | tee "$DEST/PINNED_SOURCES.txt"
 
 T="$DEST/tekken6-native-online-source"
 P="$DEST/prospero-recomp-reference"
+R="$DEST/rexglue-sdk"
+F="$DEST/fmt"
 test -f "$T/CMakeLists.txt"
 test -f "$T/src/t6_netplay.cpp"
 test -f "$T/third_party/ggpo/src/include/ggponet.h"
 test -f "$P/prospero/ps5-toolchain.cmake"
 test -f "$P/prospero/build.sh"
 test -f "$P/tools/rexglue-sdk/CMakeLists.txt"
+test -f "$R/include/rex/cvar.h"
+test -f "$R/include/rex/system/xthread.h"
+test -f "$F/include/fmt/format.h"
 
 {
     echo
     echo "## Verified source facts"
     echo "- Tekken source commit: $(git -C "$T" rev-parse HEAD)"
     echo "- PS5 ReXGlue reference commit: $(git -C "$P" rev-parse HEAD)"
+    echo "- ReXGlue SDK revision: $(git -C "$R" rev-parse HEAD)"
+    echo "- ReXGlue SDK version: $(grep -m1 'project(ReXGlue' "$R/CMakeLists.txt" || true)"
+    echo "- fmt revision: $(git -C "$F" rev-parse HEAD)"
     echo "- PS5 toolchain: present"
     echo "- ReXGlue Prospero option: $(grep -q 'REXGLUE_PLATFORM_PROSPERO' "$P/tools/rexglue-sdk/CMakeLists.txt" && echo present || echo MISSING)"
     echo "- Tekken Windows socket link: $(grep -n 'ws2_32 winmm' "$T/CMakeLists.txt" | head -n 1 || true)"
