@@ -34,6 +34,11 @@ match = re.search(pattern, text, flags=re.S)
 if match and "#ifdef _WIN32\n" + match.group(0) not in text:
     text = text[:match.start()] + "#ifdef _WIN32\n" + match.group(0) + "\n#endif" + text[match.end():]
 main.write_text(text)
+
+proto = source / "third_party/ggpo/src/lib/ggpo/network/udp_proto.cpp"
+text = proto.read_text()
+text = text.replace(".S_un.S_addr", ".s_addr")
+proto.write_text(text)
 PY
 
 echo "Applied POSIX GGPO platform, public-header, and poll overlay to $GGPO"
