@@ -1,12 +1,12 @@
 /*
  * Native PS5 first-boot diagnostic for the Tekken 6 port project.
+ * Diagnostic only: no game engine, renderer, or game assets are included.
  *
- * This is deliberately NOT the game. It proves that the native title remains
- * alive after startup. Native PS5 title entry points should not return from
- * main; the process lifecycle is controlled by the host.
+ * The previous console run reported SIGSYS. The title reached the notification,
+ * so isolate the sleep syscall by avoiding sleep/exit calls after notification.
+ * Close this short diagnostic with the PS button / Close Game.
  */
 extern int sceKernelSendNotificationRequest(int device, void *request, int size, int flags);
-extern int sceKernelUsleep(unsigned int microseconds);
 
 static void notify(const char *message) {
     char request[3120];
@@ -16,9 +16,10 @@ static void notify(const char *message) {
 }
 
 int main(void) {
-    notify("T6 PS5 port: native title is running. Diagnostic only; press PS to close.");
-    /* Keep the native title alive; returning from main caused the observed exit/crash. */
+    notify("T6 PS5 port: diagnostic started; no game yet. Press PS to close.");
+    /* Deliberately avoid syscalls and returning from main during this test. */
+    volatile unsigned long long keep_alive = 0;
     for (;;) {
-        sceKernelUsleep(1000000);
+        ++keep_alive;
     }
 }
