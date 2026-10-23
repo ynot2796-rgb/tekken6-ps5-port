@@ -1,0 +1,32 @@
+name: Socket portability test
+
+on:
+  push:
+    branches: ["main", "port/initial-scaffold"]
+    paths:
+      - "include/t6_socket_compat.h"
+      - "tests/socket_compat_test.cpp"
+      - "tests/socket-compat/**"
+      - ".github/workflows/socket-portability-test.yml"
+  pull_request:
+    paths:
+      - "include/t6_socket_compat.h"
+      - "tests/socket_compat_test.cpp"
+      - "tests/socket-compat/**"
+      - ".github/workflows/socket-portability-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  posix-socket-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S tests/socket-compat -B /tmp/t6-socket-test -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build /tmp/t6-socket-test --parallel 2
+      - name: Test loopback UDP
+        run: ctest --test-dir /tmp/t6-socket-test --output-on-failure
