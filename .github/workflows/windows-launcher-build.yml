@@ -1,0 +1,58 @@
+name: Windows launcher build check
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/windows-launcher-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  launcher:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - name: Checkout public Native Online source
+        uses: actions/checkout@v4
+        with:
+          repository: Ekspym/tekken6-native-online-source
+          ref: main
+          submodules: recursive
+          path: upstream
+
+      - name: Set up Qt 6.12 for MSVC 2022
+        uses: jurplel/setup-qt@v4
+        with:
+          version: "6.12.0"
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          cache: true
+
+      - name: Configure launcher
+        shell: pwsh
+        run: cmake -S upstream/launcher -B build/launcher -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build launcher
+        shell: pwsh
+        run: cmake --build build/launcher --config Release --parallel 2
+
+      - name: Bundle Qt runtime
+        shell: pwsh
+        run: |
+          $exe = "build/launcher/Tekken6 Native Online.exe"
+          if (!(Test-Path $exe)) {
+            throw "Expected launcher executable was not produced: $exe"
+          }
+          & "$env:QT_ROOT_DIR/bin/windeployqt.exe" --no-translations --no-system-d3d-compiler --no-opengl-sw $exe
+          if ($LASTEXITCODE -ne 0) { throw "windeployqt failed with exit code $LASTEXITCODE" }
+
+      - name: Upload launcher test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-online-launcher-windows-test
+          path: build/launcher/
+          if-no-files-found: error
+          retention-days: 7
