@@ -6,6 +6,7 @@
  */
 #include "t6_socket_compat.h"
 #include <cstdio>
+#include <cstdarg>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
