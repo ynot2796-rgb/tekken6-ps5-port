@@ -104,6 +104,14 @@ inline void Sleep(DWORD milliseconds) {
     while (::nanosleep(&req, &req) != 0 && errno == EINTR) {}
 }
 
+
+inline void *_aligned_malloc(size_t size, size_t alignment) {
+    void *memory = nullptr;
+    if (::posix_memalign(&memory, alignment, size) != 0) return nullptr;
+    return memory;
+}
+inline void _aligned_free(void *memory) { std::free(memory); }
+
 inline int fopen_s(FILE **file, const char *path, const char *mode) {
     if (!file || !path || !mode) { errno = EINVAL; return EINVAL; }
     *file = std::fopen(path, mode);
