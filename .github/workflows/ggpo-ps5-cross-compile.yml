@@ -36,7 +36,7 @@ jobs:
             "$GITHUB_WORKSPACE/.work/ps5-sdk" "$SDK_REVISION" "$GITHUB_WORKSPACE/.work/ps5-sdk-cache"
       - name: Cross-compile actual GGPO static library for PS5
         env:
-          PS5_PAYLOAD_SDK: \${{ github.workspace }}/.work/ps5-sdk
+          PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
           LLVM_CONFIG: /usr/lib/llvm-18/bin/llvm-config
           PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
