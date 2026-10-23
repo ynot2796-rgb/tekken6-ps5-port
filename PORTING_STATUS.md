@@ -24,15 +24,15 @@ The target is the updated Native Online experience—not merely offline Tekken 6
 - `native/first_boot/main.c`: first-boot notification diagnostic source, explicitly not the game.
 - `native/first_boot/sce_sys/param.json`: proposed title metadata for the diagnostic.
 - `native/first_boot/make_icon.py`: deterministic icon generator.
-- `.github/workflows/native-ps5-diagnostic.yml`: CI build/package route using the public ProsperoStore native-app build tooling pinned to commit `3290ee0d43c5e8ac49870e7c7e84639374a56bf1`. It is intended to generate a folder ZIP containing the diagnostic title and clean-room runtime; the workflow result still needs verification.
+- `native/first_boot/BUILD_STATUS.md`: build record, ZIP SHA-256 and console test procedure.
+- `.github/workflows/native-ps5-diagnostic.yml`: CI build/package route using the public ProsperoStore native-app build tooling pinned to commit `3290ee0d43c5e8ac49870e7c7e84639374a56bf1`.
 
 ## Current status — do not overstate
 
-A diagnostic app source and automated build recipe are now committed, but **there is not yet a verified working file to install**. The CI job must pass, and the resulting ZIP must launch on the user's actual PS5 firmware 13.60 through ShadowMountPlus. A build artifact alone is not console proof.
+The first native diagnostic title ZIP has been built successfully by CI and its contents were checked. SHA-256: `3b4b2eaa6ce4358fe8ef408bd8c43c5da64434804e7dec8a5b5db68b49c7fc74`. It contains `eboot.bin`, title metadata, icon, and the checksum-verified clean-room runtime; the unused helper is absent. **It has not yet been tested on a physical PS5**, so firmware 13.60 launch/registration is still unverified. See `native/first_boot/BUILD_STATUS.md`.
 
 ## Unknown / blockers
 
-- Whether the native diagnostic build succeeds with the pinned upstream tooling.
 - Whether the resulting title launches on firmware 13.60 and the user's installed ShadowMountPlus version.
 - ReXGlue runtime and generated-game integration with the native app runtime is unverified.
 - A PS5-compatible graphics backend is a major unresolved task; upstream currently uses a Xenos GPU plugin.
