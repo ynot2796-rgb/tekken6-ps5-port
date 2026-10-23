@@ -27,6 +27,12 @@ The target is the updated Native Online experience—not merely offline Tekken 6
 - `native/first_boot/sce_sys/param.json`: proposed title metadata for the diagnostic.
 - `native/first_boot/make_icon.py`: deterministic icon generator.
 - `native/first_boot/BUILD_STATUS.md`: build record and console test results.
+- `ports/ggpo-posix/`: POSIX implementation of GGPO platform timing and polling plus compatibility helpers.
+- `include/ps5_compat/`: initial host-side Win32/Winsock compatibility headers for game helper code.
+- `tools/prepare_ps5_game_source.sh`: applies the POSIX GGPO overlay and adjusts the upstream CMake target/link setup for a PS5/FreeBSD cross-build.
+- `.github/workflows/ggpo-posix-compile.yml`: compiles, links, and executes a host-side GGPO polling/clock smoke test.
+- `.github/workflows/ggpo-ps5-cross-compile.yml`: builds the actual upstream GGPO static library using the pinned PS5 SDK/toolchain and uploads the archive.
+- `.github/workflows/ps5-compat-smoke.yml`: compiles and exercises the first Win32/Winsock compatibility headers.
 - `.github/workflows/native-ps5-diagnostic.yml`: CI build/package route using the public ProsperoStore native-app build tooling pinned to commit `3290ee0d43c5e8ac49870e7c7e84639374a56bf1`.
 
 ## Current status — do not overstate
@@ -35,13 +41,15 @@ Two native diagnostic builds were produced by CI. The first crashed on the user'
 
 The second diagnostic deliberately avoids sleep and returning from `main`, using a busy loop to isolate the earlier crash. Close it with the PS button; do not leave it running. Artifact run: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40035488841
 
-**The actual Tekken 6 Native Online port has not been built yet.** The next engineering phase is no longer diagnostic packaging: establish a real game-source build path and platform boundary for the ReXGlue runtime, graphics, input, audio, timing, and networking. Preserve the upstream GGPO rollback/session code and port it rather than replacing it with a separate netcode implementation.
+**The full Tekken 6 Native Online game has not been built or booted yet.** Progress since the previous status: the full upstream GGPO source set now compiles and links on Linux with the POSIX overlay; its poll/clock smoke test passes; the same GGPO static library cross-compiles successfully for the PS5 target using the pinned public PayloadSDK/toolchain. The POSIX polling replacement and initial Win32/Winsock host compatibility headers are in the repository. Successful checks: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40040675791 and https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40040675801.
+
+The next engineering phase is to integrate the game-side host API shims and generated ReXGlue game target, then build and boot the full title. The pinned public source checkout contains no generated Tekken game code or assets; those must be generated from a compatible user-owned USA/Europe Rev 1 Xbox 360 ISO. Preserve the upstream GGPO rollback/session code and port it rather than replacing it with a separate netcode implementation.
 
 ## Unknown / blockers
 
-- ReXGlue runtime and generated-game integration with the native app runtime is unverified.
-- A PS5-compatible graphics backend is a major unresolved task; upstream currently uses a Xenos GPU plugin.
-- Windows networking/timer/input/audio dependencies must be replaced or isolated without changing online protocol behavior.
+- ReXGlue runtime and generated-game integration with the native app runtime is unverified; the game source has not yet been generated from the required user-owned ISO.
+- The PS5 GGPO static library is cross-compiled, but the full Tekken executable and ReXGlue Xenos GPU plugin have not been built together or booted.
+- Initial timer, WinSock startup, and debug/profiling compatibility shims exist; full game-side API coverage and controller/audio behavior are not yet validated. Console keyboard focus is intentionally treated as always focused and host keyboard input is disabled in the initial shim.
 - The public source does not contain official lobby endpoint and pinned certificate configuration. Do not invent endpoints or bypass authentication/certificate checks.
 - Official server/operator compatibility with a PS5 client is unverified.
 - Cross-play with PC Native Online must be tested against the same compatible release/protocol; it cannot be promised from a successful build alone.
