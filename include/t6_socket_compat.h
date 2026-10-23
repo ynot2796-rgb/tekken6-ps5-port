@@ -34,6 +34,9 @@ using u_long = unsigned long;
 #ifndef WSAEWOULDBLOCK
 #  define WSAEWOULDBLOCK EWOULDBLOCK
 #endif
+#ifndef SO_DONTLINGER
+#  define SO_DONTLINGER 0x7fff
+#endif
 
 inline int WSAGetLastError() noexcept { return errno; }
 inline int closesocket(SOCKET s) noexcept { return ::close(s); }
@@ -62,7 +65,4 @@ inline int t6_setsockopt_compat(SOCKET s, int level, int option,
     return ::setsockopt(s, level, option, value, length);
 }
 #  define setsockopt t6_setsockopt_compat
-#  ifndef SO_DONTLINGER
-#    define SO_DONTLINGER 0x7fff
-#  endif
 #endif
