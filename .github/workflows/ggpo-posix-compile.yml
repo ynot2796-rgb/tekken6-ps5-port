@@ -23,5 +23,7 @@ jobs:
         run: >-
           cmake -S tests/ggpo-posix -B .work/ggpo-build
           -DT6_REFERENCE_SOURCE="$GITHUB_WORKSPACE/.work/reference-sources/tekken6-native-online-source"
-      - name: Compile the actual upstream GGPO source set
+      - name: Compile and link the actual upstream GGPO source set
         run: cmake --build .work/ggpo-build --parallel 2
+      - name: Exercise the POSIX poll and clock at runtime
+        run: ctest --test-dir .work/ggpo-build --output-on-failure
