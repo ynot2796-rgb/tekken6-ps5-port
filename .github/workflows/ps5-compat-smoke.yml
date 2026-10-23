@@ -1,0 +1,21 @@
+name: PS5 compatibility header smoke test
+
+on:
+  push:
+    branches:
+      - main
+      - port/initial-scaffold
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile compatibility headers
+        run: c++ -std=c++17 -Wall -Wextra -Werror -I include/ps5_compat -I include tests/ps5-compat-smoke.cpp -o .work-ps5-compat-smoke
+      - name: Exercise timing, socket startup, and intrinsic shims
+        run: ./.work-ps5-compat-smoke
