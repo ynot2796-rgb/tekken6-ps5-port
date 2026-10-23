@@ -6,6 +6,7 @@
  */
 #include "t6_socket_compat.h"
 #include <cstdio>
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <strings.h>
@@ -15,6 +16,9 @@
 
 using DWORD = unsigned long;
 using HANDLE = int;
+#ifndef INFINITE
+#  define INFINITE 0x7fffffff
+#endif
 
 class Platform {
 public:
