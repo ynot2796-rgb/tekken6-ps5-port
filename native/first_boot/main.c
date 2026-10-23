@@ -1,9 +1,9 @@
 /*
  * Native PS5 first-boot diagnostic for the Tekken 6 port project.
  *
- * This is deliberately NOT the game. It proves the native-title toolchain
- * and launch path before we attempt the much larger ReXGlue/rendering port.
- * Built using the public ps5link SDK model. Keep the message short.
+ * This is deliberately NOT the game. It proves that the native title remains
+ * alive after startup. Native PS5 title entry points should not return from
+ * main; the process lifecycle is controlled by the host.
  */
 extern int sceKernelSendNotificationRequest(int device, void *request, int size, int flags);
 extern int sceKernelUsleep(unsigned int microseconds);
@@ -16,7 +16,9 @@ static void notify(const char *message) {
 }
 
 int main(void) {
-    notify("T6 PS5 port: native title booted. This is a diagnostic, not the game.");
-    sceKernelUsleep(15000000);
-    return 0;
+    notify("T6 PS5 port: native title is running. Diagnostic only; press PS to close.");
+    /* Keep the native title alive; returning from main caused the observed exit/crash. */
+    for (;;) {
+        sceKernelUsleep(1000000);
+    }
 }
