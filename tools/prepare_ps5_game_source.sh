@@ -9,6 +9,14 @@ SDK="${T6_REXGLUE_SDK_ROOT:-$SOURCE/../rexglue-sdk}"
 test -f "$SDK/include/rex/platform.h" || { echo "Missing pinned ReXGlue SDK at $SDK" >&2; exit 2; }
 test -f "$SOURCE/CMakeLists.txt" || { echo "Missing Native Online source at $SOURCE" >&2; exit 2; }
 bash "$ROOT/tools/apply_ggpo_posix_overlay.sh" "$SOURCE"
+# Supply only the two header-only SDK submodules needed by the platform-boundary compile check.
+for dep in fmt simde; do
+    dep_source="$SOURCE/../$dep"
+    test -d "$dep_source" || { echo "Missing pinned $dep dependency at $dep_source" >&2; exit 2; }
+    mkdir -p "$SDK/thirdparty"
+    rm -rf "$SDK/thirdparty/$dep"
+    ln -s "$dep_source" "$SDK/thirdparty/$dep"
+done
 python3 - "$SOURCE" "$SDK" <<'PY'
 from pathlib import Path
 import sys
