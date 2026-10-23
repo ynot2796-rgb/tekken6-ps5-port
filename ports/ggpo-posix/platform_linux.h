@@ -14,6 +14,16 @@
 #include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <sys/stat.h>
+#ifndef MAX_PATH
+#  define MAX_PATH 4096
+#endif
+inline bool CreateDirectoryA(const char *path, void *) {
+    if (::mkdir(path, 0777) == 0) return true;
+    return errno == EEXIST;
+}
+
 #include <time.h>
 
 using DWORD = unsigned long;
