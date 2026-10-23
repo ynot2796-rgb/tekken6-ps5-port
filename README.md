@@ -6,7 +6,9 @@ Goal: reuse the existing Tekken 6 Native Online project and determine the shorte
 
 ## Strategy: reuse before rewrite
 
-First evaluate whether a PS5 Windows-compatibility runtime can run the existing PC build with acceptable graphics, controller, audio, networking, and timing. If that route fails, port only the unsupported platform layers. Do not rewrite the game logic or GGPO rollback code unless testing proves a change is necessary.
+First test the existing Windows application through MihawkOS, with Prospero Win as a secondary compatibility option. MihawkOS documents Wine/Proton, DXVK and VKD3D-Proton support, but this does not guarantee compatibility with the project's custom Xenos graphics backend or Qt launcher. If compatibility fails, port only the unsupported platform layers. Do not rewrite the game logic or GGPO rollback code unless testing proves a change is necessary.
+
+See [the MihawkOS evaluation](docs/MIHAWKOS_EVALUATION.md) and [the Prospero Win evaluation](docs/PROSPERO_WIN_EVALUATION.md).
 
 ## Upstream projects
 
@@ -15,6 +17,7 @@ First evaluate whether a PS5 Windows-compatibility runtime can run the existing 
 - ReXGlue SDK: https://github.com/rexglue/rexglue-sdk
 - Original recompilation work: https://github.com/mahmoud-mess/tekken6-recomp
 - PS5 homebrew SDK: https://github.com/ps5-payload-dev/sdk
+- MihawkOS: https://github.com/mihawk-99/PS5_MihawkOS
 
 ## Confirmed constraints
 
@@ -24,12 +27,12 @@ The upstream README says official matchmaking server configuration and the pinne
 
 ## Milestones
 
-1. **Compatibility-runtime test:** verify whether a current PS5 Windows compatibility runtime can launch the existing build on firmware 13.60, and document required payload/runtime versions and limits.
-2. **Build/toolchain test:** if needed, compile a minimal native PS5 homebrew probe with a toolchain known to support the target firmware.
+1. **Compatibility-runtime test:** test the Windows build through MihawkOS first, then Prospero Win if needed. Record the exact runtime version, firmware, and error/log output.
+2. **Build/toolchain test:** establish a reproducible build of the public components and identify what requires the user's own game files.
 3. **Game launch:** test the existing game build before replacing any components.
 4. **Input/audio/performance:** verify DualSense input, sound, stable timing and rendering.
 5. **Online:** verify official service access and test cross-play with an unmodified PC client, only where permitted by the service operator.
 
 ## Current status
 
-No PS5 executable has been built or tested. The code in this repository is an initial porting scaffold, not the game. No copyrighted game files, credentials, server secrets, or guessed server addresses are included.
+No PS5 executable has been built or tested. The code in this repository is an initial porting scaffold, not the game. The user currently has source code only, so a Windows build and the user's own compatible game files are still needed before an on-console game test. No copyrighted game files, credentials, server secrets, or guessed server addresses are included.
