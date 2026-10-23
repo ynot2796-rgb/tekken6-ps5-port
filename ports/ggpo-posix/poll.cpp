@@ -6,7 +6,7 @@
 #include "types.h"
 #include "poll.h"
 #include <cerrno>
-#include <poll.h>
+#include <sys/poll.h>
 #include <vector>
 
 Poll::Poll() : _handle_count(0), _start_time(0) {}
