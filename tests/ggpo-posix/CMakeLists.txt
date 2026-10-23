@@ -50,5 +50,6 @@ if(T6_PS5_COMPAT_HEADER_CHECK)
     "${T6_REFERENCE_SOURCE}/../rexglue-sdk/include"
     "${T6_REFERENCE_SOURCE}/../fmt/include"
     "${T6_REFERENCE_SOURCE}/../simde"
+    "${T6_REFERENCE_SOURCE}/../spdlog/include"
   )
 endif()
