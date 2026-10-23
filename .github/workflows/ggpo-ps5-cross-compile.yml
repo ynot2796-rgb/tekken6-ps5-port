@@ -48,8 +48,10 @@ jobs:
             -DPS5_PAYLOAD_SDK="$PS5_PAYLOAD_SDK" \
             -DT6_REFERENCE_SOURCE="$GITHUB_WORKSPACE/.work/reference-sources/tekken6-native-online-source" \
             -DT6_GGPO_BUILD_SMOKE=OFF \
+            -DT6_PS5_PORT_ROOT="$GITHUB_WORKSPACE" \
+            -DT6_PS5_COMPAT_HEADER_CHECK=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build .work/ggpo-ps5-build --target ggpo_posix --parallel 2
+          cmake --build .work/ggpo-ps5-build --target ggpo_posix ps5_compat_header_check --parallel 2
       - name: Upload PS5 GGPO archive
         uses: actions/upload-artifact@v4
         with:
