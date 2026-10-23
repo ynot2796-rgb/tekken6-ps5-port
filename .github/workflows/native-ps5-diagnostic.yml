@@ -50,7 +50,8 @@ jobs:
           BUILD_JOBS: "2"
           USE_CCACHE: "0"
         run: |
-          make -C builder app
+          rm -f builder/.env
+          make -C builder APP_DEFINITIONS= APP_INCLUDE_PATHS= APP_STATIC_ARCHIVES= APP_IMPORT_STUBS= APP_WRAP_SYMBOLS= APP_RUNTIME_MODULES= PACBREW_PACKAGES= PACBREW_INCLUDE_PATHS= PACBREW_STATIC_ARCHIVES= APP_ROOT_FILES= app
           test -s builder/dist/PPSA99873/eboot.bin
           test -s builder/dist/PPSA99873/sce_module/libc.prx
           test -s builder/dist/PPSA99873/sce_sys/param.json
