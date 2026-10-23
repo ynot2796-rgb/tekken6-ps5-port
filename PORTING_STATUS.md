@@ -4,32 +4,43 @@
 
 - Native Online is a native Windows PC project, not an emulator package.
 - It recompiles Xbox 360 game code through ReXGlue.
-- It includes rollback networking based on a GGPO fork.
+- It includes rollback networking based on a GGPO fork and game-side netplay/session/input integration.
 - The public source does not include game code/data.
 - The public source README says the official server address, release API, pinned server certificate, and launcher artwork are not published.
 - The launcher depends on Qt 6 and Windows system libraries.
+- The upstream CMake configuration links GGPO with Windows-specific libraries (`ws2_32`, `winmm`), uses a Xenos GPU plugin, applies x86-specific compiler flags, and configures Windows GUI entry points. This is not currently a PS5 build configuration.
 
 ## Route selection
 
-**Preferred first attempt:** test a PS5 Windows-compatibility runtime against the already-built PC release before attempting a native port. This best matches the requirement to reuse the existing game, launcher, and online stack. Compatibility, architecture support, graphics API support, controller behavior, network access, and firmware 13.60 support must all be verified; do not assume they work.
+**Primary route: native PS5 homebrew port.** Do not prioritize running the Windows release through MihawkOS / Prospero Win. Preserve the current upstream online/gameplay code where possible and port the platform layers needed for PS5.
 
-**Fallback:** build a minimal native PS5 probe and port only the platform-dependent runtime/graphics/input/audio/launcher layers while preserving game logic and GGPO code where possible.
+The target is the updated Native Online experience—not merely offline Tekken 6. Desired retained functionality includes rollback netplay, online sessions/lobbies and matchmaking, and newer features such as group lobbies/spectating where they exist in the selected upstream release and can be supported by the same compatible server/protocol.
+
+**Fallback only:** Windows compatibility runtime experiments may be useful as diagnostics, but are not the main deliverable.
+
+## Work recorded
+
+- `docs/NATIVE_PS5_HOMEBREW_PORT.md`: native-port strategy and phased milestones.
+- `docs/NATIVE_PS5_SOURCE_AUDIT.md`: source-level portability findings and online-feature preservation plan.
+- Existing Windows launcher CI is only a launcher build check; it is not a PS5 build and does not validate the game.
 
 ## Unknown / blockers
 
-- Whether the compatibility runtime supports the PC build's architecture and required graphics APIs on firmware 13.60.
-- Whether the official server/operator permits a PS5 client.
-- Official matchmaking protocol details and whether they are documented.
-- Whether the exact official client protocol can be implemented on PS5 without private configuration.
-- ReXGlue runtime compatibility with an available PS5 SDK and target firmware 13.60.
-- A viable Xenos graphics backend on PS5 if compatibility translation is insufficient.
-- Availability and licensing of any required generated files and patches for a third-party port.
+- No PS5 executable or installable package has been built.
+- A minimal homebrew ELF/toolchain proof on the user's actual firmware 13.60 setup is still required.
+- ReXGlue runtime and generated-code integration with the available PS5 SDK/toolchain is unverified.
+- A PS5-compatible graphics backend is a major unresolved task; upstream currently uses a Xenos GPU plugin.
+- Windows networking/timer/input/audio dependencies must be replaced or isolated without changing online protocol behavior.
+- The public source does not contain official lobby endpoint and pinned certificate configuration. Do not invent endpoints or bypass authentication/certificate checks.
+- Official server/operator compatibility with a PS5 client is unverified.
+- Cross-play with PC Native Online must be tested against the same compatible release/protocol; it cannot be promised from a successful build alone.
 
 ## Acceptance criteria
 
-- Reproducible steps with no game data bundled.
-- Launches on the user's actual PS5 firmware 13.60.
-- Correct controller input and audio.
-- Stable gameplay timing.
-- Official matchmaking service access only if authorized and protocol-compatible.
-- Cross-play test against an unmodified PC Native Online client passes.
+- Reproducible native PS5 build and launch instructions for the user's actual firmware 13.60 setup.
+- No game image, extracted assets, generated game code, credentials, private certificates, or server secrets bundled in the public repository.
+- Correct controller input, audio, rendering, and stable gameplay timing.
+- Existing rollback netplay preserved and tested.
+- Updated online features implemented where their code and service protocol permit.
+- Official matchmaking access only with legitimate configuration and verified compatibility.
+- A cross-play test against the matching PC Native Online client passes before cross-play is described as working.
