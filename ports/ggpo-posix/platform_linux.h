@@ -16,6 +16,13 @@
 #include <unistd.h>
 
 #include <sys/stat.h>
+
+#include <csignal>
+inline void OutputDebugStringA(const char *message) {
+    if (message) { ::fputs(message, stderr); ::fflush(stderr); }
+}
+inline void DebugBreak() { ::raise(SIGTRAP); }
+
 #ifndef MAX_PATH
 #  define MAX_PATH 4096
 #endif
