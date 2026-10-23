@@ -143,6 +143,19 @@ inline DWORD GetWindowThreadProcessId(HWND, DWORD *process_id) {
     return 1;
 }
 inline SHORT GetAsyncKeyState(int) { return 0; }
+
+#ifndef MOVEFILE_REPLACE_EXISTING
+#  define MOVEFILE_REPLACE_EXISTING 0x00000001
+#endif
+inline BOOL MoveFileExA(LPCSTR existing, LPCSTR destination, DWORD flags) {
+    if (!existing || !destination) { errno = EINVAL; return FALSE; }
+    if (!(flags & MOVEFILE_REPLACE_EXISTING) && ::access(destination, F_OK) == 0) {
+        errno = EEXIST;
+        return FALSE;
+    }
+    return ::rename(existing, destination) == 0 ? TRUE : FALSE;
+}
+
 inline void OutputDebugStringA(const char *message) {
     if (message) { ::fputs(message, stderr); ::fflush(stderr); }
 }
