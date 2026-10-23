@@ -21,8 +21,8 @@ jobs:
           sudo apt-get install -y clang-18 llvm-18 llvm-18-dev llvm-18-tools cmake ninja-build make wget unzip rsync
       - name: Fetch pinned Tekken and PS5 reference sources
         run: bash tools/prepare_reference_sources.sh
-      - name: Apply the tested POSIX GGPO overlay
-        run: bash tools/apply_ggpo_posix_overlay.sh
+      - name: Apply POSIX GGPO and game CMake overlay
+        run: bash tools/prepare_ps5_game_source.sh
       - name: Export pinned PS5 SDK fork
         env:
           SDK_REVISION: b5efad528e0ac1b8289f39d72a0e890ff68ff0a6
