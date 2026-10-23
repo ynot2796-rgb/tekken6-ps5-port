@@ -10,7 +10,7 @@ test -f "$SDK/include/rex/platform.h" || { echo "Missing pinned ReXGlue SDK at $
 test -f "$SOURCE/CMakeLists.txt" || { echo "Missing Native Online source at $SOURCE" >&2; exit 2; }
 bash "$ROOT/tools/apply_ggpo_posix_overlay.sh" "$SOURCE"
 # Supply only the two header-only SDK submodules needed by the platform-boundary compile check.
-for dep in fmt simde; do
+for dep in fmt simde spdlog; do
     dep_source="$SOURCE/../$dep"
     test -d "$dep_source" || { echo "Missing pinned $dep dependency at $dep_source" >&2; exit 2; }
     mkdir -p "$SDK/thirdparty"
@@ -47,9 +47,22 @@ ntext = numeric.read_text()
 ntext = ntext.replace("#if REX_PLATFORM_MAC\n#include <locale.h>", "#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO\n#include <locale.h>", 1)
 ntext = ntext.replace("#if REX_PLATFORM_MAC\ntemplate <typename T>\ninline std::from_chars_result portable_float_from_chars", "#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO\ntemplate <typename T>\ninline std::from_chars_result portable_float_from_chars", 1)
 ntext = ntext.replace("#if REX_PLATFORM_MAC\n    auto [p, error] = portable_float_from_chars", "#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO\n    auto [p, error] = portable_float_from_chars", 1)
-if "REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO" not in ntext:
-    raise SystemExit("Could not enable ReXGlue floating-point parser fallback")
+# The vector parser has a second floating-point from_chars call; route all Mac fallback
+# branches through the same locale-stable parser on Prospero.
+ntext = ntext.replace("#if REX_PLATFORM_MAC", "#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO")
+ntext = ntext.replace("#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO || REX_PLATFORM_PROSPERO", "#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO")
+if ntext.count("#if REX_PLATFORM_MAC || REX_PLATFORM_PROSPERO") < 3:
+    raise SystemExit("Could not enable all ReXGlue floating-point parser fallbacks")
 numeric.write_text(ntext)
+
+# PS5 libc++ lacks clock_time_conversion/clock_cast; use the SDK's existing
+# Apple compatibility shim for this platform too.
+chrono = sdk / "include/rex/chrono/chrono.h"
+ctext = chrono.read_text()
+ctext = ctext.replace("#ifdef __APPLE__\n// Apple libc++ does not expose clock_time_conversion or clock_cast.", "#if defined(__APPLE__) || defined(__PROSPERO__)\n// Apple and PS5 libc++ do not expose clock_time_conversion or clock_cast.", 1)
+if "#if defined(__APPLE__) || defined(__PROSPERO__)" not in ctext:
+    raise SystemExit("Could not enable ReXGlue chrono compatibility shim")
+chrono.write_text(ctext)
 
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
