@@ -8,7 +8,7 @@
 - The public source does not include game code/data.
 - The public source README says the official server address, release API, pinned server certificate, and launcher artwork are not published.
 - The upstream CMake configuration links GGPO with Windows-specific libraries (`ws2_32`, `winmm`), uses a Xenos GPU plugin, applies x86-specific compiler flags, and configures Windows GUI entry points. This is not currently a PS5 build configuration.
-- Upstream releases currently list Native Online v2.3.5, published 21 October 2026. The selected target must track the current public source/features, not an older demo.
+- Upstream releases currently list Native Online v2.4.0, published 22 October 2026. The selected target must track the current public source/features, not an older demo.
 
 ## Route selection
 
@@ -21,6 +21,7 @@ The target is the updated Native Online experience—not merely offline Tekken 6
 - `docs/NATIVE_PS5_HOMEBREW_PORT.md`: native-port strategy and phased milestones.
 - `docs/NATIVE_PS5_SOURCE_AUDIT.md`: source-level portability findings.
 - `docs/ONLINE_PORTABILITY_NOTES.md`: session, rollback and input reuse points.
+- `docs/PS5_MENU_AND_SETTINGS_SPEC.md`: controller-first menu, settings and UI acceptance criteria.
 - `docs/PS5_TITLE_PACKAGING_AND_BOOT.md`: native title folder, runtime, signing, ShadowMountPlus and firmware-specific validation requirements.
 - `native/first_boot/main.c`: first-boot notification diagnostic source, explicitly not the game.
 - `native/first_boot/sce_sys/param.json`: proposed title metadata for the diagnostic.
