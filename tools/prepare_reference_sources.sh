@@ -9,7 +9,8 @@ TEKKEN_REV=24db272e03ab0e6c35f22abea519e76b22ecf450
 PROSPERO_BUILDER_REV=59e7086b8f920f70630d9461d357d0f6428fe4cc
 
 checkout_pin() {
-    local name="$1" url="$2" revision="$3"\n    local path="$DEST/$name"
+    local name="$1" url="$2" revision="$3"
+    local path="$DEST/$name"
     if [[ -d "$path/.git" ]]; then
         git -C "$path" fetch --depth=1 origin "$revision"
     else
