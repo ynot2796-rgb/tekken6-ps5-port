@@ -23,3 +23,15 @@ if(T6_GGPO_BUILD_SMOKE)
   target_link_libraries(ggpo_posix_smoke PRIVATE ggpo_posix)
   add_test(NAME ggpo_posix_poll_smoke COMMAND ggpo_posix_smoke)
 endif()
+
+option(T6_PS5_COMPAT_HEADER_CHECK "Compile PS5 host compatibility headers without linking an executable" OFF)
+if(T6_PS5_COMPAT_HEADER_CHECK)
+  if(NOT DEFINED T6_PS5_PORT_ROOT)
+    message(FATAL_ERROR "Set T6_PS5_PORT_ROOT to the port repository root")
+  endif()
+  add_library(ps5_compat_header_check OBJECT "\${T6_PS5_PORT_ROOT}/tests/ps5-compat-smoke.cpp")
+  target_include_directories(ps5_compat_header_check PRIVATE
+    "\${T6_PS5_PORT_ROOT}/include/ps5_compat"
+    "\${T6_PS5_PORT_ROOT}/include"
+  )
+endif()
