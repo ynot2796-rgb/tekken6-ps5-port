@@ -2,8 +2,8 @@
 # Prepare a disposable pinned Native Online checkout for a PS5/FreeBSD build.
 # The game ISO and generated recompiler files must remain user-supplied/local.
 set -euo pipefail
-ROOT="$(cd -- "$(dirname -- "\${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE="\${1:-$ROOT/.work/reference-sources/tekken6-native-online-source}"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE="${1:-$ROOT/.work/reference-sources/tekken6-native-online-source}"
 export T6_PS5_PORT_ROOT="$ROOT"
 test -f "$SOURCE/CMakeLists.txt" || { echo "Missing Native Online source at $SOURCE" >&2; exit 2; }
 bash "$ROOT/tools/apply_ggpo_posix_overlay.sh" "$SOURCE"
