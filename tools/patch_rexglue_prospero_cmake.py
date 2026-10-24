@@ -24,6 +24,33 @@ elseif(WIN32)
 RPATH_NEEDLE = "if(UNIX AND NOT APPLE)\n    # Keep installed binaries self-contained by resolving shared libs relative"
 RPATH_REPLACEMENT = "if(UNIX AND NOT APPLE AND NOT REX_PLATFORM_PROSPERO)\n    # Keep installed binaries self-contained by resolving shared libs relative"
 OPTION_LINE = 'option(REX_PLATFORM_PROSPERO "Build the ReXGlue SDK for PlayStation 5 Prospero" OFF)'
+UI_PLATFORM_NEEDLE = '''if(WIN32)
+    set(REXUI_PLATFORM_SOURCES
+        surface_win.cpp
+    )
+elseif(APPLE)
+'''
+UI_PLATFORM_REPLACEMENT = '''if(REX_PLATFORM_PROSPERO)
+    # Prospero does not use the Linux X11/Wayland surface implementation.
+    set(REXUI_PLATFORM_SOURCES)
+elseif(WIN32)
+    set(REXUI_PLATFORM_SOURCES
+        surface_win.cpp
+    )
+elseif(APPLE)
+'''
+UI_DEPS_NEEDLE = "if(UNIX AND NOT APPLE)\n    find_package(PkgConfig REQUIRED)\n    pkg_check_modules(X11_XCB REQUIRED x11-xcb)"
+UI_DEPS_REPLACEMENT = "if(UNIX AND NOT APPLE AND NOT REX_PLATFORM_PROSPERO)\n    find_package(PkgConfig REQUIRED)\n    pkg_check_modules(X11_XCB REQUIRED x11-xcb)"
+
+
+def replace_once(source: str, old: str, new: str, label: str) -> tuple[str, bool]:
+    if old in source:
+        if source.count(old) != 1:
+            raise ValueError(f"Expected exactly one {label} block")
+        return source.replace(old, new, 1), True
+    if new in source:
+        return source, False
+    raise ValueError(f"Could not locate the pinned {label} block")
 
 
 def patch_cmake(path: Path) -> bool:
@@ -38,16 +65,19 @@ def patch_cmake(path: Path) -> bool:
     elif source.count('set(REX_PLATFORM "prospero-amd64")') != 1:
         raise ValueError("Prospero option exists but its platform-selection block is incomplete")
 
-    if RPATH_NEEDLE in source:
-        if source.count(RPATH_NEEDLE) != 1:
-            raise ValueError("Expected exactly one ELF RPATH block")
-        source = source.replace(RPATH_NEEDLE, RPATH_REPLACEMENT, 1)
-        changed = True
-    elif RPATH_REPLACEMENT not in source:
-        raise ValueError("Could not locate the pinned ReXGlue ELF RPATH block")
-
+    source, did_change = replace_once(source, RPATH_NEEDLE, RPATH_REPLACEMENT, "ELF RPATH")
+    changed |= did_change
     if changed:
         path.write_text(source, encoding="utf-8")
+
+    ui_path = path.parent / "src" / "ui" / "CMakeLists.txt"
+    if ui_path.exists():
+        ui = ui_path.read_text(encoding="utf-8")
+        ui, a = replace_once(ui, UI_PLATFORM_NEEDLE, UI_PLATFORM_REPLACEMENT, "ReXUI platform source")
+        ui, b = replace_once(ui, UI_DEPS_NEEDLE, UI_DEPS_REPLACEMENT, "ReXUI Linux dependencies")
+        if a or b:
+            ui_path.write_text(ui, encoding="utf-8")
+            changed = True
     return changed
 
 
