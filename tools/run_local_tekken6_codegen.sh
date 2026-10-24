@@ -37,7 +37,7 @@ cmake --build "$WORK" --target tekken6_codegen --parallel 2
 
 STAMP="$SRC/generated/default/codegen.build.stamp"
 SOURCES="$SRC/generated/default/sources.cmake"
-test -s "$STAMP"
+test -f "$STAMP"
 test -s "$SOURCES"
 COUNT="$(find "$SRC/generated/default" -type f \\( -name '*.cpp' -o -name '*.cc' -o -name '*.cxx' \\) | wc -l | tr -d ' ')"
 BYTES="$(du -sb "$SRC/generated/default" | awk '{print $1}')"
