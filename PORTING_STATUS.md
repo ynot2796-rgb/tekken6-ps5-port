@@ -170,3 +170,15 @@ Do not claim a playable port until a native title is linked, packaged, launched 
 - The prior graphics/input probe build is blocked at final link, not at C++ compilation: run https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40062184218 failed because the chosen public SDK stub set does not export `radv_EnumeratePhysicalDevices`. Do not report a successful graphics package from that run. The next renderer task is to resolve the exact import/link compatibility against the pinned runtime, or select a consistent, known-working PS5 title foundation; do not guess at or silently stub the missing Vulkan symbol.
 - A separate public Prospero input backend has now been inspected for potential reuse: `prospero_input_driver.cpp` uses the native `scePad` lifecycle, maps the typed native pad state through `MapPadState`, handles disconnect/reconnect and errors, and avoids relying on raw byte offsets. Reuse is conditional on license and revision compatibility with the selected ReXGlue runtime.
 - Current blockers: the renderer/title link route remains unresolved; the actual user-owned Tekken 6 source has not been generated and integrated; no complete native Tekken executable/package exists; and the current native diagnostic is only a process-liveness test. The game is not yet bootable.
+
+
+## Latest checkpoint — revalidated PS5 components and renderer retry (24 October 2026)
+
+- Commit `2984e4e8a7250dfbc0d59901e93e9848600fd289` records the native renderer import/link blocker and the typed ReXGlue Prospero pad backend candidate.
+- On that commit, the game-runtime adapter contract, ISO import preflight tests, socket portability tests, GGPO POSIX compile test, PS5 compatibility header smoke test, GGPO PS5 cross-compile, and reference-source audit all passed. Links:
+  - GGPO PS5 cross-compile: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368333
+  - PS5 compatibility header: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368422
+  - POSIX compile: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368461
+  - Reference audit: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368316
+- A fresh rebuild of the pinned PS5 graphics/runtime stack is now running at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368326; at this checkpoint it is still in the bootstrap stage, so no renderer artifact is claimed.
+- This work remains component-level. A bootable native Tekken 6 title still requires the renderer/title link route to succeed, user-owned generated game source to be integrated locally, and console validation. No copyrighted game source or assets are committed to the public repository.
