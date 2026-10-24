@@ -3,14 +3,14 @@
 
 The selected ISO is read-only. The executable is copied to a temporary file
 only so the existing XEX parser can inspect it; the temporary file is removed
-when the command exits. This reports metadata but does not certify Tekken 6 or
-Rev 1 without a trusted game-specific reference.
+when the command exits. This reports metadata and a SHA-256 fingerprint, but
+does not certify Tekken 6 or Rev 1 without a trusted game-specific reference.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
-import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -48,6 +48,7 @@ def inspect_game_image(path: str | Path) -> dict[str, object]:
             "metadata-inspection limit."
         )
 
+    digest = hashlib.sha256()
     with tempfile.TemporaryDirectory(prefix="t6-xex-inspect-") as temp_dir:
         temp_xex = Path(temp_dir) / "default.xex"
         remaining = xex_size
@@ -58,6 +59,7 @@ def inspect_game_image(path: str | Path) -> dict[str, object]:
                 if not block:
                     raise GameImageError("Image ended while reading default.xex.")
                 target.write(block)
+                digest.update(block)
                 remaining -= len(block)
         metadata = inspect_xex(temp_xex)
 
@@ -65,15 +67,17 @@ def inspect_game_image(path: str | Path) -> dict[str, object]:
         "valid_xdvdfs_structure": True,
         "default_xex_present": True,
         "default_xex_size_bytes": xex_size,
+        "default_xex_sha256": digest.hexdigest(),
         "xex_metadata": metadata,
         "game_identity_verified": False,
         "revision_verified": False,
         "import_ready": False,
         "note": (
-            "XDVDFS structure and XEX execution metadata were read. This does "
-            "not prove the image is Tekken 6 USA/Europe Rev 1. Import remains "
-            "blocked until game-specific title/media IDs and a trusted revision "
-            "reference are validated."
+            "XDVDFS structure and XEX execution metadata were read. The SHA-256 "
+            "fingerprint can be compared with a trusted reference, but does not "
+            "identify the game by itself. This does not prove the image is "
+            "Tekken 6 USA/Europe Rev 1. Import remains blocked until game-specific "
+            "title/media IDs and a trusted revision reference are validated."
         ),
     }
 
