@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include "intrin.h"
 #include <functional>
 #include <pthread.h>
@@ -122,6 +123,42 @@ inline int fopen_s(FILE **file, const char *path, const char *mode) {
 }
 
 inline DWORD GetLastError() { return static_cast<DWORD>(errno); }
+
+
+/* Win32 file-copy and cooperative-yield APIs used by the game layer. */
+inline BOOL CopyFileA(LPCSTR source, LPCSTR destination, BOOL fail_if_exists) {
+    if (!source || !destination) { errno = EINVAL; return FALSE; }
+    int input = ::open(source, O_RDONLY);
+    if (input < 0) return FALSE;
+    const int flags = O_WRONLY | O_CREAT | (fail_if_exists ? O_EXCL : O_TRUNC);
+    int output = ::open(destination, flags, 0666);
+    if (output < 0) { ::close(input); return FALSE; }
+    bool ok = true;
+    char buffer[16384];
+    while (ok) {
+        const ssize_t count = ::read(input, buffer, sizeof(buffer));
+        if (count == 0) break;
+        if (count < 0) {
+            if (errno == EINTR) continue;
+            ok = false;
+            break;
+        }
+        ssize_t offset = 0;
+        while (offset < count) {
+            const ssize_t written = ::write(output, buffer + offset, static_cast<size_t>(count - offset));
+            if (written < 0 && errno == EINTR) continue;
+            if (written <= 0) { ok = false; break; }
+            offset += written;
+        }
+    }
+    if (::close(input) != 0) ok = false;
+    if (::close(output) != 0) ok = false;
+    if (!ok) ::unlink(destination);
+    return ok ? TRUE : FALSE;
+}
+inline BOOL SwitchToThread() { return ::sched_yield() == 0 ? TRUE : FALSE; }
+
+
 
 #if defined(__PROSPERO__)
 #include <rex/memory/utils.h>
