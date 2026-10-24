@@ -48,3 +48,30 @@ The graphics/input milestone is **not complete** until the probe visibly renders
 on the actual PS5 and responds to the controller. Online service endpoints,
 certificates, and PC cross-play must remain unclaimed until independently
 verified.
+
+
+## Reuse implementation added
+
+Rather than inventing a renderer or guessing at controller APIs, the repository now
+has `.github/workflows/native-ps5-render-input-probe.yml`. It checks out
+[Mihawk's PS5 Vulkan Template](https://github.com/mihawk-99/PS5_VulkanTemplate)
+at fixed commit `91179df760df1e6c6f2d4d172bc435319d79ff3c`, bootstraps its matching
+PS5_Vulkan / Mesa / PayloadSDK stack, generates a separate `PPSA99873` title named
+`Tekken 6 Port Probe` from the upstream 3D starter, and packages the result as a
+GitHub Actions artifact. This reuses the upstream title lifecycle, RADV/Vulkan
+rendering, DualSense platform layer, and build/package scripts instead of copying
+unverified API snippets into the old black-screen diagnostic.
+
+The workflow is intentionally a **probe**, not Tekken gameplay: its purpose is to
+produce a visible, controller-responsive native title that can be installed and
+tested on the target console before ReXGlue game integration. It does not replace
+the current diagnostic until the artifact builds successfully and the user verifies
+visible output and controller response on firmware 13.60. The workflow is manually
+runnable and also runs when this workflow or this audit document changes.
+
+The upstream template's foundation is MIT-licensed; its optional UI kit is
+GPL-3.0-or-later. This probe is generated without the optional UI kit. Its stack
+still contains separately licensed dependencies, which must remain attributed in
+any redistributed source or binary package. The pinned source revision is
+recorded in the workflow so future upstream changes do not silently alter this
+build.
