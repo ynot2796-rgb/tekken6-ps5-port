@@ -28,7 +28,7 @@ Priority change:
 4. Separately generate the Tekken 6 game code from the compatible user-owned game image, then integrate it with the reused native platform/runtime. The Xenia native-game target is evidence of a reusable packaging/platform route, not proof that ReXGlue output already builds or that the two game runtimes are ABI-compatible.
 5. Adapt and test the Native Online rollback/session code against the chosen game runtime; verify update/version matching and actual online service compatibility. Do not claim Tekken 6 online, cross-play, or a working native game until the relevant console tests pass.
 
-See `docs/PS5X360_REUSE_AND_RECOMP_INTEGRATION.md` for the source findings and integration plan.
+See `docs/PS5X360_REUSE_AND_RECOMP_INTEGRATION.md` for the source findings and integration plan, and `docs/PS5X360_COMPONENT_COMPATIBILITY_MATRIX.md` for the audited as-is / adapter-required / incompatible matrix. The matrix is based on the release-pinned native entry point, link script and memory adapter; it explicitly separates Xenia's guest runtime from the native ReXGlue target.
 
 ## Route selection
 
