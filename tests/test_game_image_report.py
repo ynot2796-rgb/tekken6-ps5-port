@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import struct
 import sys
@@ -57,23 +58,27 @@ class GameImageReportTests(unittest.TestCase):
                 stream.seek(xex_offset)
                 stream.write(xex)
         self.addCleanup(path.unlink, missing_ok=True)
-        return path
+        return path, bytes(xex)
 
-    def test_reports_xex_metadata_without_claiming_game_identity(self):
-        result = game_image_report.inspect_game_image(self.make_image())
+    def test_reports_xex_metadata_and_fingerprint_without_claiming_identity(self):
+        image, xex = self.make_image()
+        result = game_image_report.inspect_game_image(image)
         self.assertTrue(result["default_xex_present"])
         self.assertEqual(result["xex_metadata"]["title_id"], "58410B00")
+        self.assertEqual(result["default_xex_sha256"], hashlib.sha256(xex).hexdigest())
         self.assertFalse(result["game_identity_verified"])
         self.assertFalse(result["revision_verified"])
         self.assertFalse(result["import_ready"])
 
     def test_rejects_image_without_root_default_xex(self):
+        image, _ = self.make_image(include_xex=False)
         with self.assertRaises(game_image_report.GameImageError):
-            game_image_report.inspect_game_image(self.make_image(include_xex=False))
+            game_image_report.inspect_game_image(image)
 
     def test_rejects_invalid_xex_header(self):
+        image, _ = self.make_image(corrupt_xex=True)
         with self.assertRaises(game_image_report.XexError):
-            game_image_report.inspect_game_image(self.make_image(corrupt_xex=True))
+            game_image_report.inspect_game_image(image)
 
 
 if __name__ == "__main__":
