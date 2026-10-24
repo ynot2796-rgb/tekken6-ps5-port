@@ -225,3 +225,14 @@ Core GGPO, PS5 compatibility-header, source-audit and preflight checks remain pa
 Added `docs/PC5_PLATFORM_REUSE_AUDIT.md` (commit `c9e8ca986e4147c0eea36c75bcf71095ff557250`). Source inspection confirms PC5 provides concrete examples of PS5-native DualSense light-bar/adaptive-trigger calls, overlays/telemetry, controller configuration, title lifecycle and failure-focused logging. The audit maps relevant source files and recommends a small project-owned platform adapter tested in the existing native probe; it explicitly avoids adding PC5/Wine launcher dependencies to the game.
 
 PC5 is not an Xbox 360 ISO/XEX runtime. It launches Windows PE programs through prospero-win, so it cannot replace ReXGlue's generated Tekken runtime or PS5X360. No PC5 code was copied or compiled into this project. If any code is adapted later, file-level LGPL notices and the final distribution license need review.
+
+
+## First successful PS5 cross-compile of the networking/portability spine — 24 October 2026
+
+Run https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40067889170 completed successfully at commit `fe386a0d9443262fa798f0af725770826b3d645d` after fixing a missing `os` import in the source-preparation script. Verified in that run:
+
+- Pinned PS5 SDK export completed.
+- The actual GGPO POSIX static library cross-compiled for Prospero and was uploaded as `ggpo-posix-ps5-static-library` (SHA-256 `9271765362a00c57aeb5174e3e2bc7f695a25743c481c7631f6a6fa3aea8ef6e`).
+- PS5 compatibility headers, shared runtime/netplay headers, runtime contract, and eight selected native Tekken host modules compiled as target object files.
+
+This is the first successful PS5-target compilation of real Native Online GGPO and selected Tekken host modules in this repository. It does **not** yet compile/link the ReXGlue Xenos Vulkan plugin, generated Tekken code, or a complete native title. Next gate: attempt a controlled build of the pinned ReXGlue runtime/Xenos Vulkan plugin with the PS5 toolchain and resolve the first concrete platform/compiler/linker blockers.
