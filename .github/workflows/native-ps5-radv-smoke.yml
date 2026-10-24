@@ -69,17 +69,8 @@ jobs:
       - name: Patch lld 18 weak RADV entry-point handling
         working-directory: PS5_Vulkan
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path("tools/build-radv-title.sh")
-          source = path.read_text()
-          needle = '"$sdk_root/bin/prospero-lld" "${radv_linker_script[@]}"'
-          replacement = '"$sdk_root/bin/prospero-lld" --no-dynamic-linker "${radv_linker_script[@]}"'
-          count = source.count(needle)
-          if count != 1:
-              raise SystemExit(f"Expected one RADV link command to patch, found {count}")
-          path.write_text(source.replace(needle, replacement))
-          print("Applied --no-dynamic-linker to avoid exporting Mesa's weak optional RADV entry points as unresolved imports.")
+          python3 "$GITHUB_WORKSPACE/tools/patch_radv_linker.py" tools/build-radv-title.sh
+          python3 "$GITHUB_WORKSPACE/tests/test_patch_radv_linker.py"
 
       - name: Build upstream RADV smoke title using its own link recipe
         working-directory: PS5_Vulkan
