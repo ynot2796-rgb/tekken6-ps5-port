@@ -48,11 +48,62 @@ jobs:
           # The upstream bootstrap checks for a console host even for a build-only run.
           git clone https://github.com/mihawk-99/PS5_Vulkan.git ../PS5_Vulkan
           printf 'PS5_HOST=127.0.0.1\n' > ../PS5_Vulkan/.env
-          # Keep the template's SDK import-stub table aligned with the SDK used
-          # to build PS5_Vulkan's native linker and RADV archive. The old template
-          # pin was 611893f while PS5_Vulkan's bootstrap pins b83202b.
-          sed -i 's/^sdk_revision=611893fc25ef3e138f5bc2c90d829d8b58174cd2$/sdk_revision=b83202be73e930050e00de0f1b4d9ec46c0391bf/' ps5/tools/setup-sdk.sh
-          grep -q '^sdk_revision=b83202be73e930050e00de0f1b4d9ec46c0391bf$' ps5/tools/setup-sdk.sh
+          # Keep the template's pinned SDK intact. Its 611893f revision adds
+          # platform localeconv support required by RADV titles; PS5_Vulkan's
+          # b83202b SDK pin is separate by design and is used by its host tools.
+          grep -q '^sdk_revision=611893fc25ef3e138f5bc2c90d829d8b58174cd2
+      - name: Bootstrap the pinned PS5 graphics/runtime stack
+        working-directory: PS5_VulkanTemplate
+        env:
+          PS5_PAYLOAD_SDK: ${{ github.workspace }}/PS5_Vulkan/.deps/native/ps5-payload-sdk
+        run: |
+          bash ps5/tools/bootstrap.sh
+          # The upstream bootstrap can report "Ready" even if RADV's inner build failed.
+          # Fail here unless every native link/package dependency is actually present.
+          test -s ../PS5_Vulkan/.deps/native/radv-release/PROVENANCE.txt
+          test -s ../PS5_Vulkan/.deps/native/radv-release/lib/libvulkan_radeon.ps5.a
+          test -x ../PS5_Vulkan/build/host/ps5-native-tool
+          test -s ../PS5_Vulkan/runtime/libc.prx
+          test -s ../PS5_Vulkan/build/ps5vkctl/ps5vkctl.elf
+
+      - name: Configure generated-project Git identity
+        run: |
+          git config --global user.name "Tekken 6 PS5 Port CI"
+          git config --global user.email "tekken6-ps5-port-ci@users.noreply.github.com"
+
+      - name: Generate a Tekken-labelled visible graphics and controller probe
+        working-directory: PS5_VulkanTemplate
+        run: |
+          python3 ps5/tools/new-title.py ../t6-render-input-probe --title-id PPSA99874 --name "Tekken 6 Port Probe" --refresh 60
+          test -s ../t6-render-input-probe/ps5/tools/build.sh
+          test -s ../t6-render-input-probe/examples/starter/main.cpp || find ../t6-render-input-probe/examples -maxdepth 2 -type f | head -80
+
+      - name: Build native title
+        working-directory: t6-render-input-probe
+        env:
+          PS5_VULKAN_DIR: ${{ github.workspace }}/PS5_Vulkan
+        run: |
+          bash ps5/tools/build.sh
+          test -s dist/PPSA99874/eboot.bin
+          test -s dist/PPSA99874/sce_sys/param.json
+
+      - name: Package native title for console testing
+        run: |
+          cd t6-render-input-probe/dist
+          zip -qr PPSA99874.zip PPSA99874
+          sha256sum PPSA99874.zip | tee PPSA99874.zip.sha256
+          test -s PPSA99874.zip
+
+      - name: Upload native probe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tekken6-PS5-render-input-probe
+          path: |
+            t6-render-input-probe/dist/PPSA99874.zip
+            t6-render-input-probe/dist/PPSA99874.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+ ps5/tools/setup-sdk.sh
 
       - name: Bootstrap the pinned PS5 graphics/runtime stack
         working-directory: PS5_VulkanTemplate
