@@ -1,0 +1,78 @@
+name: ReXGlue Xenos Vulkan PS5 compile probe
+
+on:
+  push:
+    branches: ["port/initial-scaffold"]
+    paths:
+      - "tools/patch_rexglue_prospero_cmake.py"
+      - ".github/workflows/rexglue-xenos-vulkan-ps5.yml"
+      - "tools/prepare_reference_sources.sh"
+  pull_request:
+    paths:
+      - "tools/patch_rexglue_prospero_cmake.py"
+      - ".github/workflows/rexglue-xenos-vulkan-ps5.yml"
+      - "tools/prepare_reference_sources.sh"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-rexglue-xenos-vulkan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned-target host build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 llvm-18 llvm-18-dev llvm-18-tools cmake ninja-build make wget unzip rsync pkg-config
+      - name: Fetch pinned ReXGlue and PS5 reference sources
+        run: bash tools/prepare_reference_sources.sh
+      - name: Initialize pinned ReXGlue SDK dependencies
+        run: |
+          set -euo pipefail
+          git -C .work/reference-sources/rexglue-sdk submodule sync --recursive
+          git -C .work/reference-sources/rexglue-sdk submodule update --init --recursive --depth 1
+      - name: Patch pinned ReXGlue platform selection for Prospero
+        run: python3 tools/patch_rexglue_prospero_cmake.py .work/reference-sources/rexglue-sdk
+      - name: Export pinned PS5 SDK fork
+        env:
+          SDK_REVISION: b5efad528e0ac1b8289f39d72a0e890ff68ff0a6
+        run: |
+          set -euo pipefail
+          mkdir -p .work/ps5-sdk-git .work/ps5-sdk-export .work/ps5-sdk-cache
+          git -C .work/ps5-sdk-git init -q
+          git -C .work/ps5-sdk-git remote add origin https://github.com/mihawk-99/PS5_PayloadSDK.git
+          git -C .work/ps5-sdk-git fetch --depth=1 origin "$SDK_REVISION"
+          test "$(git -C .work/ps5-sdk-git rev-parse FETCH_HEAD)" = "$SDK_REVISION"
+          git -C .work/ps5-sdk-git archive FETCH_HEAD | tar -x -C .work/ps5-sdk-export
+          bash .work/ps5-sdk-export/platform/tools/setup-sdk.sh \
+            "$GITHUB_WORKSPACE/.work/ps5-sdk" "$SDK_REVISION" "$GITHUB_WORKSPACE/.work/ps5-sdk-cache"
+      - name: Configure ReXGlue runtime and Xenos Vulkan plugin
+        env:
+          PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
+          PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        run: |
+          set -euo pipefail
+          cmake -S .work/reference-sources/rexglue-sdk -B .work/rexglue-ps5-build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/.work/reference-sources/prospero-recomp-reference/prospero/ps5-toolchain.cmake" \
+            -DPS5_PAYLOAD_SDK="$PS5_PAYLOAD_SDK" \
+            -DREXGLUE_USE_D3D12=OFF \
+            -DREXGLUE_USE_VULKAN=ON \
+            -DREXGLUE_ENABLE_TRACY=OFF \
+            -DREXGLUE_ENABLE_PERF_COUNTERS=OFF \
+            -DREXGLUE_ENABLE_FIDELITYFX=OFF \
+            -DSDL_SHARED=OFF \
+            -DSDL_STATIC=ON \
+            -DSDL_TEST_LIBRARY=OFF \
+            -DSDL_TESTS=OFF \
+            -DSDL_EXAMPLES=OFF \
+            -DCMAKE_BUILD_TYPE=Release
+      - name: Build native ReXGlue runtime and Xenos Vulkan plugin
+        env:
+          PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
+          PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        run: |
+          set -euo pipefail
+          cmake --build .work/rexglue-ps5-build --target rexruntime rexgpu-xenos --parallel 2
