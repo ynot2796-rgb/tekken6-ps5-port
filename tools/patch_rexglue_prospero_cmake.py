@@ -81,6 +81,35 @@ def patch_cmake(path: Path) -> bool:
     return changed
 
 
+FFMPEG_CONFIG_NEEDLE = '''#elif defined(__ANDROID__)
+'''
+FFMPEG_CONFIG_REPLACEMENT = '''#elif defined(__FreeBSD__) || defined(__PROSPERO__)
+#include "config_linux_x86_64.h"
+#elif defined(__ANDROID__)
+'''
+
+
+def patch_ffmpeg_config(sdk_root: Path) -> bool:
+    """Use the pinned x86_64 POSIX capability profile for Prospero's libc.
+
+    This prevents the vendored FFmpeg config dispatcher from stopping at
+    '#error no config' on PS5. It is a bootstrap compatibility profile, not a
+    claim that every Linux libc feature is identical on Prospero.
+    """
+    path = sdk_root / "thirdparty" / "FFmpeg" / "config.h"
+    if not path.is_file():
+        raise ValueError(f"Missing pinned FFmpeg config header: {path}")
+    source = path.read_text(encoding="utf-8")
+    if '#elif defined(__FreeBSD__) || defined(__PROSPERO__)' in source:
+        return False
+    if source.count(FFMPEG_CONFIG_NEEDLE) != 1:
+        raise ValueError("Could not locate the pinned FFmpeg config dispatcher")
+    if not (path.parent / "config_linux_x86_64.h").is_file():
+        raise ValueError("Pinned FFmpeg Linux x86_64 config header is missing")
+    path.write_text(source.replace(FFMPEG_CONFIG_NEEDLE, FFMPEG_CONFIG_REPLACEMENT, 1), encoding="utf-8")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("sdk_root", type=Path, help="ReXGlue SDK checkout root")
@@ -88,9 +117,11 @@ def main() -> int:
     target = args.sdk_root / "CMakeLists.txt"
     try:
         changed = patch_cmake(target)
+        ffmpeg_changed = patch_ffmpeg_config(args.sdk_root)
+        changed = changed or ffmpeg_changed
     except (OSError, UnicodeError, ValueError) as exc:
         parser.error(str(exc))
-    print("Patched ReXGlue CMake for explicit Prospero selection." if changed else "Prospero CMake patch already present.")
+    print("Patched ReXGlue/FFmpeg platform selection for Prospero." if changed else "Prospero CMake and FFmpeg patches already present.")
     return 0
 
 
