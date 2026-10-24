@@ -51,10 +51,18 @@ jobs:
             -DT6_PS5_PORT_ROOT="$GITHUB_WORKSPACE" \
             -DT6_PS5_COMPAT_HEADER_CHECK=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build .work/ggpo-ps5-build --target ggpo_posix ps5_compat_header_check t6_common_header_check t6_netplay_header_check t6_host_modules_check --parallel 2
+          cmake --build .work/ggpo-ps5-build --target ggpo_posix --parallel 2
       - name: Upload PS5 GGPO archive
         uses: actions/upload-artifact@v4
         with:
           name: ggpo-posix-ps5-static-library
           path: .work/ggpo-ps5-build/libggpo_posix.a
           if-no-files-found: error
+      - name: Compile PS5 compatibility and game host modules
+        env:
+          PS5_PAYLOAD_SDK: \${{ github.workspace }}/.work/ps5-sdk
+          LLVM_CONFIG: /usr/lib/llvm-18/bin/llvm-config
+          PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        run: |
+          set -euo pipefail
+          cmake --build .work/ggpo-ps5-build --target ps5_compat_header_check t6_common_header_check t6_netplay_header_check t6_host_modules_check --parallel 2
