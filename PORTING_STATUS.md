@@ -10,6 +10,26 @@
 - The upstream CMake configuration links GGPO with Windows-specific libraries (`ws2_32`, `winmm`), uses a Xenos GPU plugin, applies x86-specific compiler flags, and configures Windows GUI entry points. This is not currently a PS5 build configuration.
 - The public source repository is pinned at commit `24db272e03ab0e6c35f22abea519e76b22ecf450` (source release 2.3.5, dated 21 October 2026). The separate Native Online release repository has since published v2.4.0, v2.4.1 and v2.4.2 on 22–23 October 2026. Their release notes describe group lobbies/live spectating, rollback-related crash fixes, and a performance fix, but those later patch implementations are not present in the public source commit. Do not claim the native port includes the 2.4.x patches until matching source or a legitimate, testable implementation is available. References: https://github.com/Ekspym/tekken6-native-online-source/commit/24db272e03ab0e6c35f22abea519e76b22ecf450 and https://github.com/Ekspym/Tekken6-native-online/releases/latest.
 
+## Updated strategy — reuse PS5X360's native Xenia platform work
+
+The project direction remains a native PS5 Tekken 6 port with the updated/recompiled game and online features. Reuse PS5X360/Xenia code wherever it reduces duplicated platform work; do not mistake a working emulator for an already-working native recompile.
+
+Source checked on 23 October 2026:
+- Repository: https://github.com/BrinooTk/PS5X360 (MIT project license; bundled dependencies keep their own licenses).
+- Latest release source observed: v1.0.2, release commit `0a178708ea2138413eea60eb7625496457455137`.
+- Release assets include `PS5X360-source-1.0.2-changes.zip`; use that matching source snapshot and its license notices when reviewing the shipped build, rather than assuming the current default-branch files alone exactly match the binary.
+- PS5X360's Xenia patch includes Prospero platform selection, POSIX source selection, PS5 clock/filesystem/logging adjustments, PS5-native memory/fault handling, a native game target and an explicit native title link/package recipe. Its build recipe links Xenia core libraries and RADV/Mesa platform libraries into a PS5 title.
+- v1.0.2 release notes say online requests no longer hang; Halo 3 sessions/connection checks/leaderboards and Modern Warfare 2 matchmaking searches were checked on a PS5, but a complete joined multiplayer match was not yet confirmed. This does not prove Tekken 6 online works.
+
+Priority change:
+1. Audit the exact v1.0.2 source snapshot and build recipes for reusable PS5 title lifecycle, RADV/Vulkan linkage, memory mappings, clocks, filesystem, logging, input/audio platform services, and Xenia's native-game target.
+2. Compare those platform adapters against our current ReXGlue-generated-game and GGPO integration. Port/adapt compatible pieces into our native port; do not copy the whole emulator wholesale or link incompatible SDK/Mesa versions.
+3. Keep the existing graphics/input probe as a fallback validation tool, but do not spend effort recreating PS5 graphics/runtime infrastructure before the PS5X360 reuse audit is complete.
+4. Separately generate the Tekken 6 game code from the compatible user-owned game image, then integrate it with the reused native platform/runtime. The Xenia native-game target is evidence of a reusable packaging/platform route, not proof that ReXGlue output already builds or that the two game runtimes are ABI-compatible.
+5. Adapt and test the Native Online rollback/session code against the chosen game runtime; verify update/version matching and actual online service compatibility. Do not claim Tekken 6 online, cross-play, or a working native game until the relevant console tests pass.
+
+See `docs/PS5X360_REUSE_AND_RECOMP_INTEGRATION.md` for the source findings and integration plan.
+
 ## Route selection
 
 **Primary route: native PS5 homebrew title.** The deliverable must be a real title folder registered by ShadowMountPlus, not a Windows executable or a payload-only demo.
