@@ -28,7 +28,7 @@ jobs:
         run: |
           git clone https://github.com/mihawk-99/PS5_Vulkan.git ../PS5_Vulkan
           git -C ../PS5_Vulkan checkout --detach f410e67a0241b3e8edcdbcd2a9b285dfc4a412ed
-          printf 'PS5_HOST=127.0.0.1\n' > ../PS5_Vulkan/.env
+          printf 'PS5_HOST=127.0.0.1\\n' > ../PS5_Vulkan/.env
           git -C ../PS5_Vulkan rev-parse HEAD
 
       - name: Install host build dependencies
@@ -53,6 +53,21 @@ jobs:
           test -x ../PS5_Vulkan/build/host/ps5-native-tool
           test -s ../PS5_Vulkan/runtime/libc.prx
           test -s ../PS5_Vulkan/build/ps5vkctl/ps5vkctl.elf
+
+      - name: Patch lld 18 weak RADV entry-point handling
+        working-directory: PS5_Vulkan
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("tools/build-radv-title.sh")
+          source = path.read_text()
+          needle = '"$sdk_root/bin/prospero-lld" "${radv_linker_script[@]}"'
+          replacement = '"$sdk_root/bin/prospero-lld" --no-dynamic-linker "${radv_linker_script[@]}"'
+          count = source.count(needle)
+          if count != 1:
+              raise SystemExit(f"Expected one RADV link command to patch, found {count}")
+          path.write_text(source.replace(needle, replacement))
+          print("Applied --no-dynamic-linker to avoid exporting Mesa's weak optional RADV entry points as unresolved imports.")
 
       - name: Build upstream RADV smoke title using its own link recipe
         working-directory: PS5_Vulkan
