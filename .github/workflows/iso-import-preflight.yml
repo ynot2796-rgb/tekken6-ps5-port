@@ -7,18 +7,22 @@ on:
       - "tools/iso_preflight.py"
       - "tools/xex_metadata.py"
       - "tools/xdvdfs_root.py"
+      - "tools/game_image_report.py"
       - "tests/test_iso_preflight.py"
       - "tests/test_xex_metadata.py"
       - "tests/test_xdvdfs_root.py"
+      - "tests/test_game_image_report.py"
       - ".github/workflows/iso-import-preflight.yml"
   pull_request:
     paths:
       - "tools/iso_preflight.py"
       - "tools/xex_metadata.py"
       - "tools/xdvdfs_root.py"
+      - "tools/game_image_report.py"
       - "tests/test_iso_preflight.py"
       - "tests/test_xex_metadata.py"
       - "tests/test_xdvdfs_root.py"
+      - "tests/test_game_image_report.py"
       - ".github/workflows/iso-import-preflight.yml"
   workflow_dispatch:
 
@@ -35,3 +39,4 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_*preflight.py' -v
           python3 -m unittest discover -s tests -p 'test_xex_metadata.py' -v
           python3 -m unittest discover -s tests -p 'test_xdvdfs_root.py' -v
+          python3 -m unittest discover -s tests -p 'test_game_image_report.py' -v
