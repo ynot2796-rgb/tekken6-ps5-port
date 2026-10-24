@@ -44,6 +44,41 @@ class ReXGlueProsperoCMakePatchTests(unittest.TestCase):
         self.assertIn("if(UNIX AND NOT APPLE AND NOT REX_PLATFORM_PROSPERO)", result)
         self.assertNotIn("if(UNIX AND NOT APPLE)\n    # Keep installed binaries", result)
 
+    def test_skips_linux_ui_surface_and_x11_wayland_dependencies_for_prospero(self):
+        ui = """if(WIN32)
+    set(REXUI_PLATFORM_SOURCES
+        surface_win.cpp
+    )
+elseif(APPLE)
+    set(REXUI_PLATFORM_SOURCES
+        surface_mac.cpp
+    )
+else()
+    set(REXUI_PLATFORM_SOURCES
+        surface_gnulinux.cpp
+    )
+endif()
+
+if(UNIX AND NOT APPLE)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(X11_XCB REQUIRED x11-xcb)
+    pkg_check_modules(WAYLAND REQUIRED wayland-client)
+endif()
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "CMakeLists.txt"
+            target.write_text(BASE, encoding="utf-8")
+            ui_path = root / "src" / "ui" / "CMakeLists.txt"
+            ui_path.parent.mkdir(parents=True)
+            ui_path.write_text(ui, encoding="utf-8")
+            MODULE.patch_cmake(target)
+            patched = ui_path.read_text(encoding="utf-8")
+            self.assertIn("if(REX_PLATFORM_PROSPERO)", patched)
+            self.assertIn("set(REXUI_PLATFORM_SOURCES)", patched)
+            self.assertIn("if(UNIX AND NOT APPLE AND NOT REX_PLATFORM_PROSPERO)", patched)
+            self.assertNotIn("pkg_check_modules(X11_XCB REQUIRED x11-xcb)", patched)
+
     def test_patch_is_idempotent(self):
         first, changed = self.apply(BASE)
         self.assertTrue(changed)
