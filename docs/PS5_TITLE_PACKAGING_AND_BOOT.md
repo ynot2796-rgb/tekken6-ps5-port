@@ -63,3 +63,10 @@ This diagnostic title does not meet the user's final goal. The final goal remain
 ## Build artifact honesty
 
 A CI build that produces an ELF, a signed executable, or even a folder ZIP is only a build milestone. It is not a working PS5 file until all runtime requirements are present and the title has launched on firmware 13.60. No Sony runtime module, game ISO, extracted game assets, private certificate, or server secret will be bundled in this repository.
+
+
+## New SDK platform groundwork — 24 October 2026
+
+The render/input probe has now built successfully twice in CI (runs 40066666719 and 40067130875). A separate tested helper prepares the pinned ReXGlue SDK CMake platform selection for an explicit Prospero target; its regression suite passed in run 40067358848. The helper is intentionally not described as a full SDK port: a subsequent target build must still confirm compiler flags, platform source selection, Vulkan/Xenos plugin dependencies, runtime imports, and title packaging.
+
+Source inspection of the Native Online-pinned ReXGlue SDK confirms a Vulkan implementation of the Xenos GPU plugin exists alongside D3D12. The practical next path is to adapt and compile that existing renderer for Prospero rather than writing a new Xenos renderer from zero. The game still needs its locally generated code, runtime/platform adapters, and on-console validation.
