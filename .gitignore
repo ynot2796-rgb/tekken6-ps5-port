@@ -1,0 +1,9 @@
+build/
+out/
+*.elf
+*.pkg
+*.bin
+*.iso
+*.xex
+native/game/
+generated/default/

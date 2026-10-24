@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(t6_socket_compat_test LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_executable(t6_socket_compat_test socket_compat_test.cpp)
+target_include_directories(t6_socket_compat_test PRIVATE ../../include)
+enable_testing()
+add_test(NAME posix_udp_socket_compat COMMAND t6_socket_compat_test)

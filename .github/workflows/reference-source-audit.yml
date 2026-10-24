@@ -1,0 +1,25 @@
+name: Reference source audit
+
+on:
+  push:
+    branches:
+      - main
+      - port/initial-scaffold
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-existing-sources:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned existing port sources
+        run: bash tools/prepare_reference_sources.sh
+      - name: Upload source audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: t6-reference-source-audit
+          path: .work/reference-sources/*.md
+          if-no-files-found: error

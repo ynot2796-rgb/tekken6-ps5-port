@@ -1,0 +1,29 @@
+name: GGPO POSIX port compile test
+
+on:
+  push:
+    branches:
+      - main
+      - port/initial-scaffold
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-ggpo:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned upstream and PS5 reference sources
+        run: bash tools/prepare_reference_sources.sh
+      - name: Apply POSIX platform and poll overlay
+        run: bash tools/apply_ggpo_posix_overlay.sh
+      - name: Configure GGPO compile test
+        run: >-
+          cmake -S tests/ggpo-posix -B .work/ggpo-build
+          -DT6_REFERENCE_SOURCE="$GITHUB_WORKSPACE/.work/reference-sources/tekken6-native-online-source"
+      - name: Compile and link the actual upstream GGPO source set
+        run: cmake --build .work/ggpo-build --parallel 2
+      - name: Exercise the POSIX poll and clock at runtime
+        run: ctest --test-dir .work/ggpo-build --output-on-failure

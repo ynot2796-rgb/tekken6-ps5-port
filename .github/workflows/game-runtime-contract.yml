@@ -1,0 +1,17 @@
+name: Game runtime adapter contract
+on:
+  push:
+    branches: [main, "port/**"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile adapter contract smoke test
+        run: c++ -std=c++20 -Wall -Wextra -Werror -pedantic -I include tests/game-runtime-contract.cpp -o /tmp/game-runtime-contract
+      - name: Exercise frame input and rollback snapshot contract
+        run: /tmp/game-runtime-contract

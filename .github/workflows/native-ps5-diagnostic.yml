@@ -1,0 +1,81 @@
+name: Native PS5 diagnostic title
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "port/initial-scaffold" ]
+    paths:
+      - "native/first_boot/**"
+      - ".github/workflows/native-ps5-diagnostic.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-diagnostic-title:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout port source
+        uses: actions/checkout@v4
+
+      - name: Checkout public native-app build tooling
+        uses: actions/checkout@v4
+        with:
+          repository: darkxex/ProsperoStore
+          ref: 3290ee0d43c5e8ac49870e7c7e84639374a56bf1
+          path: builder
+
+      - name: Install host build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 lld-18 wget unzip zip python3 make ninja-build
+
+      - name: Stage diagnostic source and metadata
+        run: |
+          mkdir -p builder/native/first_boot/sce_sys
+          cp native/first_boot/main.c builder/native/first_boot/main.c
+          cp native/first_boot/sce_sys/param.json builder/native/first_boot/sce_sys/param.json
+          cp native/first_boot/make_icon.py builder/native/first_boot/make_icon.py
+          python3 builder/native/first_boot/make_icon.py builder/native/first_boot/sce_sys/icon0.png
+
+      - name: Fetch and verify the public clean-room runtime
+        run: |
+          mkdir -p builder/runtime
+          wget -q https://github.com/darkxex/ProsperoStore/releases/latest/download/PPSA99000.zip -O /tmp/prosperostore.zip
+          unzip -p /tmp/prosperostore.zip PPSA99000/sce_module/libc.prx > builder/runtime/libc.prx
+          (cd builder/runtime && sha256sum --check --strict libc.prx.sha256)
+
+      - name: Build and package native title
+        env:
+          APP_SOURCE_DIR: native/first_boot
+          APP_PARAM: native/first_boot/sce_sys/param.json
+          APP_SCE_SYS: native/first_boot/sce_sys
+          APP_ASSETS: ""
+          APP_LAPY_HELPER: "0"
+          BUILD_LABEL: "T6 diagnostic"
+          BUILD_JOBS: "2"
+          USE_CCACHE: "0"
+        run: |
+          rm -f builder/.env
+          make -C builder -o runtime/libc.prx APP_DEFINITIONS= APP_INCLUDE_PATHS= APP_STATIC_ARCHIVES= APP_IMPORT_STUBS= APP_WRAP_SYMBOLS= APP_RUNTIME_MODULES= APP_LAPY_HELPER=0 PACBREW_PACKAGES= PACBREW_INCLUDE_PATHS= PACBREW_STATIC_ARCHIVES= APP_ROOT_FILES= app
+          test -s builder/dist/PPSA99873/eboot.bin
+          test -s builder/dist/PPSA99873/sce_module/libc.prx
+          test -s builder/dist/PPSA99873/sce_sys/param.json
+          test ! -e builder/dist/PPSA99873/lapy.elf
+          chmod -R 777 builder/dist/PPSA99873
+          rm -f builder/dist/PPSA99873.zip
+          (cd builder/dist && python3 -m zipfile -c PPSA99873.zip PPSA99873)
+          test -s builder/dist/PPSA99873.zip
+          sha256sum builder/dist/PPSA99873.zip | tee builder/dist/PPSA99873.zip.sha256
+          find builder/dist/PPSA99873 -maxdepth 3 -type f -printf '%P %s bytes\n' | sort
+
+      - name: Upload native title folder ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: T6-PS5-native-diagnostic-${{ github.sha }}
+          path: |
+            builder/dist/PPSA99873.zip
+            builder/dist/PPSA99873.zip.sha256
+          if-no-files-found: error
+          retention-days: 30

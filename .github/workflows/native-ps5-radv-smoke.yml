@@ -1,0 +1,100 @@
+name: Native PS5 RADV graphics smoke title
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["port/initial-scaffold"]
+    paths:
+      - ".github/workflows/native-ps5-radv-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-radv-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Checkout pinned PS5 Vulkan template (bootstrap only)
+        uses: actions/checkout@v4
+        with:
+          repository: mihawk-99/PS5_VulkanTemplate
+          ref: 91179df760df1e6c6f2d4d172bc435319d79ff3c
+          path: PS5_VulkanTemplate
+          submodules: recursive
+
+      - name: Checkout matching PS5 Vulkan stack at a fixed revision
+        working-directory: PS5_VulkanTemplate
+        run: |
+          git clone https://github.com/mihawk-99/PS5_Vulkan.git ../PS5_Vulkan
+          git -C ../PS5_Vulkan checkout --detach f410e67a0241b3e8edcdbcd2a9b285dfc4a412ed
+          printf 'PS5_HOST=127.0.0.1\n' > ../PS5_Vulkan/.env
+          git -C ../PS5_Vulkan rev-parse HEAD
+
+      - name: Restore pinned native toolchain and RADV build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            PS5_Vulkan/.deps/native/radv-release
+            PS5_Vulkan/.deps/native/ps5-payload-sdk
+            PS5_Vulkan/build/host
+            PS5_Vulkan/build/ps5vkctl
+            PS5_Vulkan/runtime/libc.prx
+            PS5_Vulkan/runtime/libc.prx.sha256
+          key: ps5-radv-${{ runner.os }}-v1-ps5vulkan-f410e67a-sdk-611893fc-mesa-pinned-release
+
+      - name: Install host build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang-18 lld-18 cmake ninja-build glslang-tools rsync curl zstd git python3-pip python3-numpy python3-pil python3-mako libllvmspirvlib-18-dev llvm-spirv-18 libclang-18-dev
+          python3 -m pip install --user --break-system-packages 'meson>=1.4.0'
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          clang-18 --version
+          "$HOME/.local/bin/meson" --version
+          glslangValidator --version
+
+      - name: Bootstrap pinned PS5 Vulkan/RADV runtime
+        working-directory: PS5_VulkanTemplate
+        env:
+          PS5_PAYLOAD_SDK: ${{ github.workspace }}/PS5_Vulkan/.deps/native/ps5-payload-sdk
+        run: |
+          grep -Fq 'sdk_revision=611893fc25ef3e138f5bc2c90d829d8b58174cd2' ps5/tools/setup-sdk.sh
+          bash ps5/tools/bootstrap.sh
+          test -s ../PS5_Vulkan/.deps/native/radv-release/PROVENANCE.txt
+          test -s ../PS5_Vulkan/.deps/native/radv-release/lib/libvulkan_radeon.ps5.a
+          test -x ../PS5_Vulkan/build/host/ps5-native-tool
+          test -s ../PS5_Vulkan/runtime/libc.prx
+          test -s ../PS5_Vulkan/build/ps5vkctl/ps5vkctl.elf
+
+      - name: Patch lld 18 weak RADV entry-point handling
+        working-directory: PS5_Vulkan
+        run: |
+          python3 "$GITHUB_WORKSPACE/tools/patch_radv_linker.py" tools/build-radv-title.sh
+          python3 "$GITHUB_WORKSPACE/tests/test_patch_radv_linker.py"
+
+      - name: Build upstream RADV smoke title using its own link recipe
+        working-directory: PS5_Vulkan
+        env:
+          RADV_ARCHIVE: ${{ github.workspace }}/PS5_Vulkan/.deps/native/radv-release/lib/libvulkan_radeon.ps5.a
+        run: |
+          bash tools/build-radv-title.sh
+          test -s dist/PPSA99014/eboot.bin
+          test -s dist/PPSA99014/sce_sys/param.json
+          sha256sum dist/PPSA99014/eboot.bin
+
+      - name: Package smoke title
+        run: |
+          cd PS5_Vulkan/dist
+          zip -qr PPSA99014.zip PPSA99014
+          sha256sum PPSA99014.zip | tee PPSA99014.zip.sha256
+          test -s PPSA99014.zip
+
+      - name: Upload native RADV smoke title
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tekken6-PS5-RADV-graphics-smoke
+          path: |
+            PS5_Vulkan/dist/PPSA99014.zip
+            PS5_Vulkan/dist/PPSA99014.zip.sha256
+          if-no-files-found: error
+          retention-days: 14

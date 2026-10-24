@@ -1,0 +1,42 @@
+name: ISO import preflight tests
+
+on:
+  push:
+    branches: [ "port/initial-scaffold" ]
+    paths:
+      - "tools/iso_preflight.py"
+      - "tools/xex_metadata.py"
+      - "tools/xdvdfs_root.py"
+      - "tools/game_image_report.py"
+      - "tests/test_iso_preflight.py"
+      - "tests/test_xex_metadata.py"
+      - "tests/test_xdvdfs_root.py"
+      - "tests/test_game_image_report.py"
+      - ".github/workflows/iso-import-preflight.yml"
+  pull_request:
+    paths:
+      - "tools/iso_preflight.py"
+      - "tools/xex_metadata.py"
+      - "tools/xdvdfs_root.py"
+      - "tools/game_image_report.py"
+      - "tests/test_iso_preflight.py"
+      - "tests/test_xex_metadata.py"
+      - "tests/test_xdvdfs_root.py"
+      - "tests/test_game_image_report.py"
+      - ".github/workflows/iso-import-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  iso-preflight:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ISO structure, root directory, and XEX metadata tests
+        run: |
+          python3 -m unittest discover -s tests -p 'test_*preflight.py' -v
+          python3 -m unittest discover -s tests -p 'test_xex_metadata.py' -v
+          python3 -m unittest discover -s tests -p 'test_xdvdfs_root.py' -v
+          python3 -m unittest discover -s tests -p 'test_game_image_report.py' -v
