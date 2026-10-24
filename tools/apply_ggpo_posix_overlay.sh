@@ -46,4 +46,17 @@ text = text.replace(r"synclogs\\", "synclogs/")
 sync_test.write_text(text)
 PY
 
-echo "Applied POSIX GGPO platform, public-header, and poll overlay to $GGPO"
+
+# Fix legacy constructor spellings rejected by modern Clang/libc++.
+python3 - "$SOURCE" <<'PY'
+from pathlib import Path
+import sys
+ggpo = Path(sys.argv[1]) / "third_party/ggpo/src/lib/ggpo"
+for name, template in (("static_buffer.h", "StaticBuffer"), ("ring_buffer.h", "RingBuffer")):
+    path = ggpo / name
+    text = path.read_text()
+    text = text.replace(f"{template}<T, N>()", f"{template}()")
+    path.write_text(text)
+PY
+
+echo "Applied POSIX GGPO platform, public-header, poll, and legacy C++ fixes to $GGPO"
