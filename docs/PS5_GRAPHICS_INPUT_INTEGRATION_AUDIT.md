@@ -75,3 +75,20 @@ still contains separately licensed dependencies, which must remain attributed in
 any redistributed source or binary package. The pinned source revision is
 recorded in the workflow so future upstream changes do not silently alter this
 build.
+
+
+## Build result and corrected next step (24 October 2026)
+
+The pinned render/input probe was attempted in CI at run
+https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40062184218.
+Its C++ sources compiled, but the final native link failed with:
+
+`error: no public SDK stub exports required symbol radv_EnumeratePhysicalDevices`
+
+This is a dependency/import-stub compatibility failure. It is not a successful package, and it does not justify adding a fake implementation of a Vulkan entry point. Before retrying the full RADV build, inspect the pinned build tool's import-stub resolution and the exact dependency that declares this import. If the pinned public SDK cannot support it, switch to a compatible pinned renderer/runtime stack rather than mixing unrelated SDK or Mesa revisions.
+
+Input-source review found a more defensible integration reference:
+https://github.com/LoZazaMastro/TheSimpsonsGame-PS5-Builder/blob/main/tools/rexglue-sdk/src/input/prospero/prospero_input_driver.cpp
+That BSD-3-Clause implementation owns the native pad lifecycle, calls `scePadReadState` into the SDK's typed `PadData`, maps through `MapPadState`, handles device-not-connected/reconnect cases, and exposes XInput-style state to recompiled code. It is a candidate for reuse only after matching the chosen ReXGlue revision, required headers, SDK version, and license notices. It should be preferred over the PS5X360 sample's hard-coded raw pad byte offsets when the same typed adapter is available.
+
+**Current gate:** resolve native renderer import/link compatibility and produce a visible, controller-responsive native title. Only then integrate the generated Tekken runtime and game renderer. No Tekken gameplay package is currently available.
