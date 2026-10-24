@@ -45,3 +45,22 @@ PS5X360 is an Xbox 360 emulator. Its existing Xenia title can run Xbox 360 code 
 - v1.0.2 release notes/source assets: https://github.com/BrinooTk/PS5X360/releases/tag/v1.0.2
 - Native Tekken source pinned in `PORTING_STATUS.md`: Native Online public source v2.3.5 era; the later v2.4.x release features are not assumed present in that pinned source.
 - At this checkpoint, no complete native Tekken 6 executable has been linked or booted. The reuse plan is now recorded; implementation and physical-console proof remain outstanding.
+
+
+## Renderer reuse correction — ReXGlue already contains a Vulkan Xenos backend (24 October 2026)
+
+A direct source inspection of the public `rexglue/rexglue-sdk` tree confirms that the Xenos GPU plugin is not inherently D3D12-only. Its `src/graphics/CMakeLists.txt` includes a Vulkan implementation (`src/graphics/vulkan/*`) and SPIR-V shader translator when `REXGLUE_USE_VULKAN` is enabled; the D3D12 source set is conditional on `REXGLUE_USE_D3D12`. The SDK root currently detects only Windows, Linux, and macOS, so Prospero platform support is still missing. This materially improves the reuse path: prioritize porting the existing ReXGlue Xenos/Vulkan renderer to the PS5 platform rather than assuming a wholly new Xenos renderer must be written.
+
+### Revised integration order
+
+1. Start from the exact ReXGlue SDK revision pinned by Native Online's `patches/rexglue/README.md` and preserve its patch set; don't blindly use the moving SDK main branch.
+2. Add an explicit Prospero platform/toolchain selection in the SDK's platform detection, libc/thread/time/filesystem abstractions and build-system assumptions. Keep host-side ReXGlue codegen built for the CI host; compile generated game sources and runtime for the PS5 target separately.
+3. Configure `REXGLUE_USE_VULKAN=ON` and `REXGLUE_USE_D3D12=OFF` for the target, then prove the `rexgpu-xenos` plugin and its Vulkan dependencies compile/link against the same pinned PS5 Vulkan/RADV stack already validated by the native probe.
+4. Build the non-game SDK/runtime with a tiny test harness first; next compile the user's locally generated Tekken code and the game-side native adaptations. Keep XEX-derived code and assets out of public CI.
+5. Adapt Native Online's Windows-specific app, socket, timer, input, audio and filesystem seams to Prospero; preserve deterministic frame/input/snapshot contracts and then test rollback locally.
+
+### Evidence and constraints
+
+- The native render/input probe package build passed in CI at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40066666719. This verifies the separate PS5 Vulkan title foundation only; it does not compile the ReXGlue Xenos renderer or Tekken game code.
+- Native Online's current game target explicitly requests `GPU_PLUGINS xenos` but also uses Windows socket/audio libraries and Win32-oriented build settings. Enabling Vulkan alone is not enough: SDK platform detection, runtime services, app entrypoint, memory model, plugin loading, and PS5-specific imports still need porting.
+- No generated Tekken code or user game image was uploaded to CI. A working Tekken package is still not built or console-verified.
