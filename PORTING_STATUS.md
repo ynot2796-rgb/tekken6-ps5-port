@@ -8,13 +8,13 @@
 - The public source does not include game code/data.
 - The public source README says the official server address, release API, pinned server certificate, and launcher artwork are not published.
 - The upstream CMake configuration links GGPO with Windows-specific libraries (`ws2_32`, `winmm`), uses a Xenos GPU plugin, applies x86-specific compiler flags, and configures Windows GUI entry points. This is not currently a PS5 build configuration.
-- Upstream releases currently list Native Online v2.4.0, published 22 October 2026. The selected target must track the current public source/features, not an older demo.
+- The public source repository is pinned at commit `24db272e03ab0e6c35f22abea519e76b22ecf450` (source release 2.3.5, dated 21 October 2026). The separate Native Online release repository has since published v2.4.0, v2.4.1 and v2.4.2 on 22–23 October 2026. Their release notes describe group lobbies/live spectating, rollback-related crash fixes, and a performance fix, but those later patch implementations are not present in the public source commit. Do not claim the native port includes the 2.4.x patches until matching source or a legitimate, testable implementation is available. References: https://github.com/Ekspym/tekken6-native-online-source/commit/24db272e03ab0e6c35f22abea519e76b22ecf450 and https://github.com/Ekspym/Tekken6-native-online/releases/latest.
 
 ## Route selection
 
 **Primary route: native PS5 homebrew title.** The deliverable must be a real title folder registered by ShadowMountPlus, not a Windows executable or a payload-only demo.
 
-The target is the updated Native Online experience—not merely offline Tekken 6. Desired retained functionality includes rollback netplay, online sessions/lobbies and matchmaking, and newer features such as practice-mode tools, group lobbies/spectating where their code and compatible service protocol permit.
+The target is the updated Native Online experience—not merely offline Tekken 6. The currently available source includes the 2.3.5-era rollback/session integration and practice tools. The 2.4.x release notes advertise group lobbies/live spectating and additional rollback/performance fixes, but these later changes are not present in the pinned public source. They remain explicit porting targets, not implemented features; porting them requires the corresponding public source changes or a lawful, technically verifiable implementation, plus compatible service protocol access.
 
 ## Work recorded
 
@@ -53,6 +53,7 @@ The next engineering phase is no longer the initial netplay compile: it is the n
 - Initial timer, WinSock startup, and debug/profiling compatibility shims exist; full game-side API coverage and controller/audio behavior are not yet validated. Console keyboard focus is intentionally treated as always focused and host keyboard input is disabled in the initial shim.
 - The public source does not contain official lobby endpoint and pinned certificate configuration. Do not invent endpoints or bypass authentication/certificate checks.
 - Official server/operator compatibility with a PS5 client is unverified.
+- Source/release gap: the latest public source commit is 2.3.5, while the release page is at 2.4.2. The 2.4.0 group-lobby/spectating feature and 2.4.1/2.4.2 fixes cannot be assumed to exist in the source currently being cross-compiled.
 - Cross-play with PC Native Online must be tested against the same compatible release/protocol; it cannot be promised from a successful build alone.
 
 ## Acceptance criteria
