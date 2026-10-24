@@ -24,5 +24,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Validate preparation script syntax
+        run: bash -n tools/prepare_ps5_game_source.sh
+
+      - name: Validate Python helper and tests
+        run: python3 -m py_compile tools/patch_rexglue_prospero_cmake.py tests/test_patch_rexglue_prospero_cmake.py
+
       - name: Run guarded CMake patch regression tests
         run: python3 -m unittest discover -s tests -p 'test_patch_rexglue_prospero_cmake.py' -v
