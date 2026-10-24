@@ -55,6 +55,8 @@ jobs:
 
       - name: Build native title
         working-directory: t6-render-input-probe
+        env:
+          PS5_VULKAN_DIR: ${{ github.workspace }}/PS5_Vulkan
         run: |
           bash ps5/tools/build.sh
           test -s dist/PPSA99873/eboot.bin
