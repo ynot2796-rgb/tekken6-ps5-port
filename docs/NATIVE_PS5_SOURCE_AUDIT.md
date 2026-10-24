@@ -1,6 +1,6 @@
 # Native PS5 Port: Source Portability Audit
 
-Status: source-level audit only; no PS5 binary has been built.
+Status: source-level audit. A minimal diagnostic title has been built and launched, and the GGPO static library has cross-compiled for PS5; the Tekken 6 game executable has not been built.
 
 ## Target
 
@@ -41,12 +41,12 @@ The PS5 build must match the PC version's protocol and deterministic game build 
 
 ## Current blockers
 
-- No PS5 executable or package exists yet.
-- No verified PS5 toolchain build has been completed in this repository.
+- No Tekken 6 game executable or package exists yet; the only console-tested package is a minimal process-liveness diagnostic.
+- The PS5 toolchain has compiled the GGPO static library, but full game-target/toolchain integration remains unverified.
 - Renderer/backend portability is unresolved.
 - Official lobby endpoint and pinned certificate are absent from public source; online access cannot be promised until legitimate configuration and compatibility are established.
-- Firmware 13.60 runtime compatibility and a supported packaging/launch route still need an actual test.
+- The diagnostic has launched in the user's firmware 13.60 setup without an immediate crash, but graphics, input, audio, and game-runtime compatibility remain unverified.
 
 ## Honest status
 
-This audit confirms that the existing source contains reusable netplay and gameplay integration code, but it is a Windows-oriented build with substantial platform and renderer dependencies. The next milestone is a reproducible PS5 toolchain/ELF proof and a source dependency map—not a claim that the game already runs on PS5.
+This audit confirms that the existing source contains reusable netplay and gameplay integration code, but it is a Windows-oriented build with substantial platform and renderer dependencies. The next milestone is to get the deterministic/netplay game modules compiling against the PS5 target, then prove a native graphics/input loop. This is not a claim that Tekken 6 already runs on PS5.
