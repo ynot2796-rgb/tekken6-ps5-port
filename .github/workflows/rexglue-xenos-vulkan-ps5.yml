@@ -67,6 +67,7 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/.work/reference-sources/prospero-recomp-reference/prospero/ps5-toolchain.cmake" \
             -DPS5_PAYLOAD_SDK="$PS5_PAYLOAD_SDK" \
             -DPROSPERO=ON \
+            -DPS5=ON \
             -DREXGLUE_USE_D3D12=OFF \
             -DREXGLUE_USE_VULKAN=ON \
             -DREXGLUE_ENABLE_TRACY=OFF \
