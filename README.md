@@ -1,6 +1,6 @@
 # Tekken 6 Native Online — Native PS5 Port
 
-**Status: native diagnostic package built; Tekken 6 itself is not ported yet.** The first native title ZIP has passed CI packaging checks but has not been tested on a physical PS5.
+**Status: native diagnostic launch verified; Tekken 6 itself is not ported yet.** The user reports the diagnostic title stays on a black screen without an immediate crash on their PS5 setup. The upstream GGPO library has also cross-compiled successfully in an earlier CI run, and host-side portability tests pass. None of this is a playable game build.
 
 ## Goal
 
@@ -11,7 +11,7 @@ Build a **native PS5 homebrew title** for Tekken 6 Native Online, preserving its
 The chosen route is a real native title build:
 - Evaluate the public [ps5link SDK](https://github.com/Rufidj/ps5link-sdk) and [PS5 payload SDK](https://github.com/ps5-payload-dev/sdk) for toolchain, linker and platform interfaces.
 - Follow the native-title structure and packaging requirements documented in [PS5 title packaging and boot](docs/PS5_TITLE_PACKAGING_AND_BOOT.md).
-- A first-boot diagnostic title ZIP is built. See [build record and install test](native/first_boot/BUILD_STATUS.md); the next validation is launching it through ShadowMountPlus on firmware 13.60.
+- A first-boot diagnostic title ZIP was built and launched through the user's ShadowMountPlus setup on firmware 13.60. The black screen is expected for this process-liveness test; see [build record and install test](native/first_boot/BUILD_STATUS.md).
 - Only after that proof, port the game runtime, rendering, input, audio, timing, filesystem and networking dependencies.
 - Preserve upstream rollback/session/snapshot behavior and validate PC cross-play against the matching upstream version before claiming it works.
 
@@ -50,11 +50,11 @@ No game image, extracted game assets, generated proprietary game code, credentia
 
 ## Milestones
 
-1. [ ] Native build environment and dependency versions pinned.
-2. [ ] Minimal native diagnostic title built with valid metadata and runtime dependencies.
-3. [ ] Diagnostic title registers and launches through ShadowMountPlus on firmware 13.60.
-4. [ ] Portability layer for sockets, timing, threads, input, audio and filesystem.
-5. [ ] Native rendering proof, then game runtime/ReXGlue integration.
-6. [ ] Offline gameplay, deterministic rollback and performance tests.
-7. [ ] Online service configuration and protocol compatibility validated legitimately.
-8. [ ] Cross-play test against the matching PC Native Online release.
+1. [x] Toolchain and public reference-source revisions pinned in CI.
+2. [x] Minimal native diagnostic title built and packaged by CI.
+3. [x] Diagnostic title launched on the user's PS5 setup; black-screen/no-crash is only a process-liveness result.
+4. [x] GGPO POSIX overlay passes host-side smoke tests; the GGPO static library has cross-compiled for PS5 in an earlier successful run.
+5. [ ] Finish current CI validation of the PS5 compatibility headers and deterministic/netplay game modules.
+6. [ ] Native graphics proof, then game runtime/ReXGlue integration and actual game build.
+7. [ ] Offline gameplay, controller/audio, stable timing, rollback and performance tests.
+8. [ ] Legitimate online-service configuration and a cross-play test against the matching PC release.
