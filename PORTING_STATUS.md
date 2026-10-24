@@ -45,6 +45,14 @@ The second diagnostic deliberately avoids sleep and returning from `main`, using
 
 The next engineering phase is no longer the initial netplay compile: it is the native title's graphics/runtime boundary and the ReXGlue-generated game target. The green CI compile is only a compile check, not a linked game executable. First prove a visible PS5 graphics/input loop; then integrate the generated ReXGlue game target and native platform services, and only then build and boot the full title. The pinned public source checkout contains no generated Tekken game code or assets; those must be generated from a compatible user-owned USA/Europe Rev 1 Xbox 360 ISO. Preserve the upstream GGPO rollback/session code and port it rather than replacing it with a separate netcode implementation.
 
+## Latest graphics/input build checkpoint
+
+- Latest attempted native graphics/input workflow before the current retry: [run 40060776596](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40060776596), commit `e4bfc76f0ba688fa36a348fb40e9186b2693a299`. It passed host dependency installation, then RADV's Meson configuration failed because the host LLVM/SPIR-V translator development package was missing: `Dependency "LLVMSPIRVLib" not found`.
+- Corrective commit: `7627239f20e0850dbd0a6c55b469b2ff5565211c` ("Install LLVM SPIR-V development dependency for RADV build"). The native graphics/input workflow now installs Ubuntu 24.04's `libllvmspirvlib-18-dev` and `llvm-spirv-18`, matching the LLVM 18 host toolchain.
+- Current retry: [run 40061787706](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40061787706), on the corrective commit. Last checked: job still in progress during "Install host dependencies"; no result yet. Do not treat this fix as verified until RADV config/build passes.
+- The workflow will then generate a separate `PPSA99874` title from the pinned PS5 Vulkan starter, build it, package it with SHA-256, and upload an artifact. The starter is a real Vulkan 3D sample with model animation, a settings overlay, and camera movement via the controller, but the generated title has not yet been built or tested on the user's console.
+- This build retry is a graphics/input foundation only. The full Tekken 6 executable is still unbuilt; actual game-code generation requires the user's compatible game image locally, and console rendering/controller behavior must be physically verified.
+
 ## Unknown / blockers
 
 - ReXGlue runtime and generated-game integration with the native app runtime is unverified; the game source has not yet been generated from the required user-owned ISO.
