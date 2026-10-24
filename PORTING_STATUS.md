@@ -104,3 +104,14 @@ These are real compile/test results and improve confidence in the rollback libra
 - Updated online features implemented where their code and service protocol permit.
 - Official matchmaking access only with legitimate configuration and verified compatibility.
 - A cross-play test against the matching PC Native Online client passes before cross-play is described as working.
+
+
+## Latest engineering progress — game/rollback adapter contract
+
+Commit `ccb30d72612c92717506d58668f2e67789f78c74` adds `include/t6_game_runtime.h`, a stable boundary for the future generated-game adapter:
+- A fixed-size, 16-byte per-frame input record so rollback can replay captured input instead of sampling the controller during resimulation.
+- Explicit initialize/shutdown and deterministic one-frame advance callbacks.
+- State-size/save/load callbacks for GGPO rollback snapshots, with the contract documenting that snapshots must include all simulation-affecting state and exclude device/socket/wall-clock state.
+- A strict host CI smoke test uses a fake game to verify input delivery, snapshot save, further simulation, and restore.
+
+Verification: [Game runtime adapter contract CI](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063168998) — compile and runtime test passed on Ubuntu 24.04. This validates the interface/test harness only; it does not mean the generated Tekken code has been adapted yet. The next step is to implement the adapter against actual ReXGlue-generated entry points and prove state determinism, then connect the callback surface to GGPO.
