@@ -46,6 +46,11 @@ jobs:
         working-directory: PS5_VulkanTemplate
         run: bash ps5/tools/bootstrap.sh
 
+      - name: Configure generated-project Git identity
+        run: |
+          git config --global user.name "Tekken 6 PS5 Port CI"
+          git config --global user.email "tekken6-ps5-port-ci@users.noreply.github.com"
+
       - name: Generate a Tekken-labelled visible graphics and controller probe
         working-directory: PS5_VulkanTemplate
         run: |
