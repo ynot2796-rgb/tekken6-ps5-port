@@ -1,4 +1,5 @@
 #include "t6_game_runtime.h"
+#include "t6_input_adapter.h"
 
 #include <array>
 #include <cassert>
@@ -39,6 +40,26 @@ int main() {
   FakeGame game;
   GameCallbacks callbacks{&game, init, shutdown, advance, state_size, save, load};
   assert(callbacks_complete(callbacks));
+
+  // Input capture is stable and normalized before simulation/rollback.
+  PadSample pad{};
+  pad.connected = true;
+  pad.game_buttons = 0x1234;
+  pad.left_x = 0;
+  pad.left_y = 128;
+  pad.right_x = 255;
+  pad.right_y = 128;
+  pad.left_trigger = 42;
+  pad.right_trigger = 200;
+  const FrameInput captured = capture_frame_input(pad, 1);
+  assert(captured.buttons == 0x1234 && captured.player == 1);
+  assert(captured.left_x == -32768 && captured.left_y == 0);
+  assert(captured.right_x == 32767 && captured.right_y == 0);
+  assert(captured.left_trigger == 42 && captured.right_trigger == 200);
+  pad.connected = false;
+  const FrameInput disconnected = capture_frame_input(pad, 0);
+  assert(disconnected.buttons == 0 && disconnected.left_x == 0 &&
+         disconnected.left_y == 0 && disconnected.left_trigger == 0);
 
   // Missing mandatory callbacks must fail closed before the runtime starts.
   auto incomplete = callbacks;
