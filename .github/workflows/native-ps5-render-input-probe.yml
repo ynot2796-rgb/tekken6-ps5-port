@@ -48,6 +48,11 @@ jobs:
           # The upstream bootstrap checks for a console host even for a build-only run.
           git clone https://github.com/mihawk-99/PS5_Vulkan.git ../PS5_Vulkan
           printf 'PS5_HOST=127.0.0.1\n' > ../PS5_Vulkan/.env
+          # Keep the template's SDK import-stub table aligned with the SDK used
+          # to build PS5_Vulkan's native linker and RADV archive. The old template
+          # pin was 611893f while PS5_Vulkan's bootstrap pins b83202b.
+          sed -i 's/^sdk_revision=611893fc25ef3e138f5bc2c90d829d8b58174cd2$/sdk_revision=b83202be73e930050e00de0f1b4d9ec46c0391bf/' ps5/tools/setup-sdk.sh
+          grep -q '^sdk_revision=b83202be73e930050e00de0f1b4d9ec46c0391bf$' ps5/tools/setup-sdk.sh
 
       - name: Bootstrap the pinned PS5 graphics/runtime stack
         working-directory: PS5_VulkanTemplate
