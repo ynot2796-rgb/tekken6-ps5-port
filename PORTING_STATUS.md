@@ -115,3 +115,10 @@ Commit `ccb30d72612c92717506d58668f2e67789f78c74` adds `include/t6_game_runtime.
 - A strict host CI smoke test uses a fake game to verify input delivery, snapshot save, further simulation, and restore.
 
 Verification: [Game runtime adapter contract CI](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063168998) — compile and runtime test passed on Ubuntu 24.04. This validates the interface/test harness only; it does not mean the generated Tekken code has been adapted yet. The next step is to implement the adapter against actual ReXGlue-generated entry points and prove state determinism, then connect the callback surface to GGPO.
+
+
+## Follow-up — rollback contract included in PS5-target compile checks
+
+Commit `39bda158c26f2d43703278248660aaf9cc451464` wires the new game-runtime contract header into the existing PS5-target C++ header smoke test. The Prospero cross-compile job now checks the 16-byte frame-input ABI and compile-time callback contract on the PS5 toolchain as well as the host CI smoke test. [PS5 compatibility header workflow](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063318142)
+
+This is still a boundary-validation milestone, not the game integration itself. The next critical task is implementing against the actual ReXGlue-generated game entry points and its existing snapshot machinery. Upstream `t6_snapshot.cpp` shows why this cannot be treated as a generic memory-copy callback: the existing snapshot path synchronizes worker threads and GPU/draw-idle state, and its memory walker relies on host-specific page queries. Those constraints must be preserved or deliberately replaced by a native renderer/runtime design before rollback can be trusted.
