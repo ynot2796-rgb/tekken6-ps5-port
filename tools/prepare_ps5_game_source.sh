@@ -294,35 +294,9 @@ session.write_text(stext)
 # The pinned ReXGlue SDK defaults to Windows, Linux, and macOS platform detection.
 # Add an explicit Prospero target switch rather than letting the PS5 FreeBSD-like
 # toolchain accidentally select the Linux implementation.
-sdk_cmake = sdk / "CMakeLists.txt"
-sdk_text = sdk_cmake.read_text()
-sdk_platform_marker = '''if(WIN32)
-    if(REX_TARGET_PROCESSOR MATCHES "AMD64|x86_64")
-        set(REX_PLATFORM "win-amd64")
-'''
-sdk_platform_replacement = '''option(REX_PLATFORM_PROSPERO "Build the ReXGlue SDK for PlayStation 5 Prospero" OFF)
-
-if(REX_PLATFORM_PROSPERO)
-    if(NOT REX_TARGET_PROCESSOR MATCHES "AMD64|x86_64")
-        message(FATAL_ERROR "Prospero builds require the 64-bit x86 target")
-    endif()
-    set(REX_PLATFORM "prospero-amd64")
-    add_compile_definitions(REX_PLATFORM_PROSPERO=1)
-elseif(WIN32)
-    if(REX_TARGET_PROCESSOR MATCHES "AMD64|x86_64")
-        set(REX_PLATFORM "win-amd64")
-'''
-if sdk_platform_marker in sdk_text:
-    sdk_text = sdk_text.replace(sdk_platform_marker, sdk_platform_replacement, 1)
-elif 'option(REX_PLATFORM_PROSPERO "Build the ReXGlue SDK for PlayStation 5 Prospero" OFF)' not in sdk_text:
-    raise SystemExit("Could not locate the pinned ReXGlue SDK platform-selection block")
-# Do not inject ELF RPATH settings into a PS5 SELF/title link.
-sdk_text = sdk_text.replace(
-    "if(UNIX AND NOT APPLE)\n    # Keep installed binaries self-contained by resolving shared libs relative",
-    "if(UNIX AND NOT APPLE AND NOT REX_PLATFORM_PROSPERO)\n    # Keep installed binaries self-contained by resolving shared libs relative",
-    1,
-)
-sdk_cmake.write_text(sdk_text)
+# Explicitly patch the pinned SDK's platform selection; the helper is idempotent and fails closed on drift.
+import subprocess
+subprocess.run([sys.executable, str(root / "tools/patch_rexglue_prospero_cmake.py"), str(sdk)], check=True)
 
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
