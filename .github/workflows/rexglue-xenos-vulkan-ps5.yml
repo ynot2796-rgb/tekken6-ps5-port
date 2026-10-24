@@ -68,6 +68,15 @@ jobs:
             -DSDL_TEST_LIBRARY=OFF \
             -DSDL_TESTS=OFF \
             -DSDL_EXAMPLES=OFF \
+            -DSDL_X11=OFF \
+            -DSDL_WAYLAND=OFF \
+            -DSDL_KMSDRM=OFF \
+            -DSDL_DBUS=OFF \
+            -DSDL_ALSA=OFF \
+            -DSDL_PULSEAUDIO=OFF \
+            -DSDL_PIPEWIRE=OFF \
+            -DSDL_JACK=OFF \
+            -DSDL_OSS=OFF \
             -DCMAKE_BUILD_TYPE=Release
       - name: Build native ReXGlue runtime and Xenos Vulkan plugin
         env:
