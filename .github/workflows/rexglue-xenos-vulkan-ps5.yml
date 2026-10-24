@@ -58,6 +58,7 @@ jobs:
           cmake -S .work/reference-sources/rexglue-sdk -B .work/rexglue-ps5-build -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/.work/reference-sources/prospero-recomp-reference/prospero/ps5-toolchain.cmake" \
             -DPS5_PAYLOAD_SDK="$PS5_PAYLOAD_SDK" \
+            -DREX_PLATFORM_PROSPERO=ON \
             -DREXGLUE_USE_D3D12=OFF \
             -DREXGLUE_USE_VULKAN=ON \
             -DREXGLUE_ENABLE_TRACY=OFF \
