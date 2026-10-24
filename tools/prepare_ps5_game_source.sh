@@ -178,6 +178,70 @@ void CwStop() {}
     rtext = rtext[:match.start()] + replacement + rtext[match.end():]
 research.write_text(rtext)
 
+# Port session-level Windows diagnostics/input probes without changing the
+# deterministic rollback/session logic. Keep PC behavior unchanged.
+session = root / "src/t6_session.cpp"
+stext = session.read_text()
+
+# Machine telemetry is a Windows-only diagnostic; PS5 logs a concise native line.
+import re
+log_pattern = r"void LogSystemOnce\(\) \{.*?\n\}"
+log_match = re.search(log_pattern, stext, flags=re.S)
+if not log_match:
+    raise SystemExit("Could not locate LogSystemOnce")
+if "#if defined(__PROSPERO__)" not in log_match.group(0):
+    stext = stext[:log_match.start()] + r'''void LogSystemOnce() {
+#if defined(__PROSPERO__)
+  static bool done = false;
+  if (done) return;
+  done = true;
+  REXLOG_INFO("T6 system: running on native Prospero; OS telemetry unavailable");
+#else
+''' + log_match.group(0)[len("void LogSystemOnce() {"):-1] + r'''
+#endif
+}''' + stext[log_match.end():]
+
+# Windows thread priority tuning is optional and not equivalent to Prospero scheduling.
+prio = '''  if (T6Env("T6_NET_PRIO")) {
+    SetProcessPriorityBoost(GetCurrentProcess(), TRUE);
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+    REXLOG_INFO("T6 net: priority boost off, main thread above normal");
+  }'''
+if prio in stext:
+    stext = stext.replace(prio, '''#if !defined(__PROSPERO__)
+''' + prio + '''
+#else
+  if (T6Env("T6_NET_PRIO"))
+    REXLOG_WARN("T6_NET_PRIO is a Windows-only experiment and is ignored on PS5");
+#endif''', 1)
+
+# Address length is checked above; memcpy + terminator is portable and bounded.
+stext = stext.replace("strcpy_s(pl.u.remote.ip_address, c.remote_ip.c_str());",
+                      "std::memcpy(pl.u.remote.ip_address, c.remote_ip.c_str(), c.remote_ip.size() + 1);", 1)
+# Compiler-independent bit counts for input diagnostics.
+stext = stext.replace("__popcnt((local[0] & ~g_last_sent[0]) & 0xFF)",
+                      "__builtin_popcount((local[0] & ~g_last_sent[0]) & 0xFF)", 1)
+stext = stext.replace("__popcnt((local[1] & ~g_last_sent[1]) & 0x0F)",
+                      "__builtin_popcount((local[1] & ~g_last_sent[1]) & 0x0F)", 1)
+
+# WinMM joystick polling is not the PS5 controller API. Disable only the optional
+# Windows diagnostic thread; actual controller integration remains a separate task.
+input_pattern = r"void InputDiagThread\(\) \{.*?\n\}"
+input_match = re.search(input_pattern, stext, flags=re.S)
+if not input_match:
+    raise SystemExit("Could not locate InputDiagThread")
+if "#if !defined(__PROSPERO__)" not in input_match.group(0):
+    original = input_match.group(0)
+    replacement = "#if !defined(__PROSPERO__)\n" + original + r'''
+#else
+void InputDiagThread() {
+  REXLOG_WARN("T6 input diagnostics: WinMM joystick polling is unavailable on PS5");
+}
+#endif
+'''
+    stext = stext[:input_match.start()] + replacement + stext[input_match.end():]
+session.write_text(stext)
+
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
 
