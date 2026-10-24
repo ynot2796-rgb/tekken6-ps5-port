@@ -218,3 +218,10 @@ Core GGPO, PS5 compatibility-header, source-audit and preflight checks remain pa
 - The patch helper is build-system groundwork only: no full ReXGlue SDK target or Tekken-generated code has yet been compiled for Prospero. Next compile gate is the pinned ReXGlue runtime/Xenos Vulkan plugin with the PS5 toolchain, then platform service adapters and locally generated Tekken code.
 - The renderer audit confirmed the pinned Native Online ReXGlue SDK already contains a Xenos Vulkan backend; therefore the preferred path is to port that backend to Prospero rather than start a replacement renderer from scratch. SDK platform detection, runtime services, native app/input/audio, and PS5 import/link compatibility remain to be implemented and verified.
 - Still no native Tekken 6 executable/package and no PS5-console proof of the probe's rendering/input. The probe package remains available via the successful workflow above.
+
+
+## PC5 platform-reuse audit — 24 October 2026
+
+Added `docs/PC5_PLATFORM_REUSE_AUDIT.md` (commit `c9e8ca986e4147c0eea36c75bcf71095ff557250`). Source inspection confirms PC5 provides concrete examples of PS5-native DualSense light-bar/adaptive-trigger calls, overlays/telemetry, controller configuration, title lifecycle and failure-focused logging. The audit maps relevant source files and recommends a small project-owned platform adapter tested in the existing native probe; it explicitly avoids adding PC5/Wine launcher dependencies to the game.
+
+PC5 is not an Xbox 360 ISO/XEX runtime. It launches Windows PE programs through prospero-win, so it cannot replace ReXGlue's generated Tekken runtime or PS5X360. No PC5 code was copied or compiled into this project. If any code is adapted later, file-level LGPL notices and the final distribution license need review.
