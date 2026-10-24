@@ -157,6 +157,7 @@ inline BOOL CopyFileA(LPCSTR source, LPCSTR destination, BOOL fail_if_exists) {
     return ok ? TRUE : FALSE;
 }
 inline BOOL SwitchToThread() { return ::sched_yield() == 0 ? TRUE : FALSE; }
+inline void YieldProcessor() { __builtin_ia32_pause(); }
 
 
 
