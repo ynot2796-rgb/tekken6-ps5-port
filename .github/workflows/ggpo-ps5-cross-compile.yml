@@ -65,4 +65,4 @@ jobs:
           PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
           set -euo pipefail
-          cmake --build .work/ggpo-ps5-build --target ps5_compat_header_check t6_common_header_check t6_netplay_header_check t6_host_modules_check --parallel 2
+          cmake --build .work/ggpo-ps5-build --target ps5_compat_header_check t6_common_header_check t6_netplay_header_check t6_runtime_contract_check t6_host_modules_check --parallel 2
