@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 namespace {
 struct FakeGame {
@@ -22,14 +23,13 @@ int advance(void* user, const t6::runtime::FrameInput* inputs, std::size_t count
 std::size_t state_size(void*) { return sizeof(FakeGame); }
 int save(void* user, void* dst, std::size_t size) {
   if (!user || !dst || size != sizeof(FakeGame)) return -1;
-  *static_cast<FakeGame*>(user);
-  auto& game = *static_cast<FakeGame*>(user);
-  __builtin_memcpy(dst, &game, sizeof(game));
+  const auto& game = *static_cast<FakeGame*>(user);
+  std::memcpy(dst, &game, sizeof(game));
   return 0;
 }
 int load(void* user, const void* src, std::size_t size) {
   if (!user || !src || size != sizeof(FakeGame)) return -1;
-  __builtin_memcpy(user, src, sizeof(FakeGame));
+  std::memcpy(user, src, sizeof(FakeGame));
   return 0;
 }
 }  // namespace
