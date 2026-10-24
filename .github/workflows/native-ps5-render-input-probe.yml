@@ -51,7 +51,7 @@ jobs:
           # Keep the template's pinned SDK intact. Its 611893f revision adds
           # platform localeconv support required by RADV titles; PS5_Vulkan's
           # b83202b SDK pin is separate by design and is used by its host tools.
-          grep -q '^sdk_revision=611893fc25ef3e138f5bc2c90d829d8b58174cd2
+          grep -Fq 'sdk_revision=611893fc25ef3e138f5bc2c90d829d8b58174cd2' ps5/tools/setup-sdk.sh
       - name: Bootstrap the pinned PS5 graphics/runtime stack
         working-directory: PS5_VulkanTemplate
         env:
