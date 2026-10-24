@@ -49,6 +49,11 @@ if(T6_PS5_COMPAT_HEADER_CHECK)
   add_library(t6_netplay_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/t6-netplay-header-smoke.cpp")
   target_include_directories(t6_netplay_header_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
   target_compile_features(t6_netplay_header_check PRIVATE cxx_std_23)
+  # Compile the actual runtime rollback contract test for the PS5 target too.
+  # Object-only keeps host assert/memory test logic out of the shipped title.
+  add_library(t6_runtime_contract_check OBJECT "${T6_PS5_PORT_ROOT}/tests/game-runtime-contract.cpp")
+  target_include_directories(t6_runtime_contract_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
+  target_compile_features(t6_runtime_contract_check PRIVATE cxx_std_23)
   # Start with the deterministic/networking spine rather than globbing every
   # optional Windows/UI utility. t6_research.cpp depends on Win32 SEH/VirtualProtect,
   # while t6_practice_hud.cpp depends on ImGui; neither is a valid first-pass
