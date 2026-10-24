@@ -110,6 +110,22 @@ def patch_ffmpeg_config(sdk_root: Path) -> bool:
     return True
 
 
+def patch_ffmpeg_malloc_header(sdk_root: Path) -> bool:
+    """Avoid the PS5 SDK's deliberate malloc.h error in FFmpeg's POSIX allocator."""
+    path = sdk_root / "thirdparty" / "FFmpeg" / "libavutil" / "mem.c"
+    if not path.is_file():
+        raise ValueError(f"Missing pinned FFmpeg allocator source: {path}")
+    source = path.read_text(encoding="utf-8")
+    old = "#include <malloc.h>"
+    new = "#include <stdlib.h>"
+    if new in source and old not in source:
+        return False
+    if source.count(old) != 1:
+        raise ValueError("Could not locate the single FFmpeg malloc.h include")
+    path.write_text(source.replace(old, new, 1), encoding="utf-8")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("sdk_root", type=Path, help="ReXGlue SDK checkout root")
@@ -118,10 +134,11 @@ def main() -> int:
     try:
         changed = patch_cmake(target)
         ffmpeg_changed = patch_ffmpeg_config(args.sdk_root)
-        changed = changed or ffmpeg_changed
+        malloc_changed = patch_ffmpeg_malloc_header(args.sdk_root)
+        changed = changed or ffmpeg_changed or malloc_changed
     except (OSError, UnicodeError, ValueError) as exc:
         parser.error(str(exc))
-    print("Patched ReXGlue/FFmpeg platform selection for Prospero." if changed else "Prospero CMake and FFmpeg patches already present.")
+    print("Patched ReXGlue/FFmpeg platform selection and allocator for Prospero." if changed else "Prospero CMake and FFmpeg patches already present.")
     return 0
 
 
