@@ -191,3 +191,11 @@ The second graphics/input probe attempt reached the native title linker: all 29 
 This confirms the earlier failure is reproducible and isolated to native linking/import validation rather than compilation. Do not add a dummy Vulkan symbol or call this a successful title. The next engineering step is to inspect the pinned native tool's import validation and ensure the RADV archive, title template, Payload SDK fork, and PS5_Vulkan link recipe are a compatible set at fixed revisions. Current public PS5_Vulkan's own RADV link recipe whole-archives its Mesa driver and binds platform libc symbols locally; use that as a consistency reference, not as proof that simply changing a URL fixes the mismatch.
 
 Core GGPO, PS5 compatibility-header, source-audit and preflight checks remain passing, but there is still no packaged renderer probe and no generated Tekken game executable. Game source/data and game-specific renderer/runtime integration remain separate required milestones.
+
+
+## Latest build-pipeline hardening — 24 October 2026
+
+- Commits `bb9f88e9e860d735366faadb750237d64de9ec4b`, `e45af04b83c95e4eaba629d2e9ad26da0c2e7067`, `ad803c228e7d7fe48320efb5e9affbc8b6d6e933`, and `6d5d1b864490612a855c5973072efe394ed6d4b3` extract the LLVM 18 RADV link workaround into `tools/patch_radv_linker.py`, add unit tests, and use the tested helper in both native graphics workflows.
+- The patch helper is intentionally fail-closed: it only changes exactly one known linker command, tolerates an already-patched command on retries, and rejects unexpected or duplicate command layouts. Each graphics workflow runs the helper's unit tests before proceeding to title linking.
+- Source was re-read after commits to verify the helper, tests, and both workflow call sites are present. The current GitHub commit-status endpoint returned no status entries for the latest workflow commits, so no new successful CI run or artifact is claimed yet.
+- This is build-system hardening only. The RADV import/link issue still needs a successful run to prove the fix works with the pinned toolchain. No complete Tekken 6 game runtime has been linked, and no playable package or PS5 gameplay test exists yet.
