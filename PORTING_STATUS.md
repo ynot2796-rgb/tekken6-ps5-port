@@ -65,6 +65,16 @@ The second diagnostic deliberately avoids sleep and returning from `main`, using
 
 The next engineering phase is no longer the initial netplay compile: it is the native title's graphics/runtime boundary and the ReXGlue-generated game target. The green CI compile is only a compile check, not a linked game executable. First prove a visible PS5 graphics/input loop; then integrate the generated ReXGlue game target and native platform services, and only then build and boot the full title. The pinned public source checkout contains no generated Tekken game code or assets; those must be generated from a compatible user-owned USA/Europe Rev 1 Xbox 360 ISO. Preserve the upstream GGPO rollback/session code and port it rather than replacing it with a separate netcode implementation.
 
+## Latest verified CI progress — 24 October 2026
+
+The newest CI runs on commit `1c2f9dedb2abd9f51b47ae50b37fda54f3257322` confirm:
+- **PS5X360 source-contract audit: PASS** — exact release-pinned entry point, memory wrappers, native title link recipe and platform patch markers verified. Run: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40062884908
+- **Host GGPO POSIX compile/link/runtime smoke test: PASS** — the actual upstream GGPO source set builds and the POSIX polling/clock test executes. Run: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40062884870
+- **PS5-target GGPO static-library cross-compile: PASS** — PS5 SDK/toolchain build completed and uploaded artifact `ggpo-posix-ps5-static-library` (SHA-256 `3f0d18ced3cf6186791fc91d77869bda2544e20337a0a21176dad5a5c2ccb784`). Run: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40062884867
+- **ISO import preflight and socket portability checks: PASS** — these validate helper logic and portability, not game-code generation or online service access. Runs: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40062888409 and https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40062888372
+
+These are real compile/test results and improve confidence in the rollback library and platform adaptation, but they are not a linked or booted Tekken 6 title. The highest-risk unresolved engineering work remains ReXGlue game-code generation/ABI integration and a native graphics/presentation path. The PS5 GGPO archive is a build artifact for further integration, not an installable game package.
+
 ## Latest graphics/input build checkpoint
 
 - Latest attempted native graphics/input workflow before the current retry: [run 40060776596](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40060776596), commit `e4bfc76f0ba688fa36a348fb40e9186b2693a299`. It passed host dependency installation, then RADV's Meson configuration failed because the host LLVM/SPIR-V translator development package was missing: `Dependency "LLVMSPIRVLib" not found`.
