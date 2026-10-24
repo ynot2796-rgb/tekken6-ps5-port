@@ -8,12 +8,12 @@ on:
       - ".github/workflows/rexgpu-xenos-ps5.yml"
       - "tools/prepare_reference_sources.sh"
       - "patches/**"
-      - "patches/**"
   pull_request:
     paths:
       - "tools/patch_rexglue_prospero_cmake.py"
       - ".github/workflows/rexgpu-xenos-ps5.yml"
       - "tools/prepare_reference_sources.sh"
+      - "patches/**"
   workflow_dispatch:
 
 permissions:
