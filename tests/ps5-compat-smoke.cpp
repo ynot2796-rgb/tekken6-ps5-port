@@ -4,6 +4,7 @@
 #include "intrin.h"
 
 #include <cstdio>
+#include <string>
 
 int main() {
     LARGE_INTEGER frequency{}, before{}, after{};
@@ -46,6 +47,41 @@ int main() {
     }
     std::remove("/tmp/t6-ps5-compat-smoke.out");
     Sleep(0);
+    if (!SwitchToThread()) {
+        std::fprintf(stderr, "thread-yield shim failed\n");
+        return 9;
+    }
+    const char *copy_source = "/tmp/t6-ps5-copy-source.tmp";
+    const char *copy_destination = "/tmp/t6-ps5-copy-destination.tmp";
+    FILE *copy_file = std::fopen(copy_source, "w");
+    if (!copy_file) return 10;
+    std::fputs("copy-test", copy_file);
+    std::fclose(copy_file);
+    std::remove(copy_destination);
+    if (!CopyFileA(copy_source, copy_destination, TRUE)) {
+        std::fprintf(stderr, "POSIX CopyFileA shim failed\n");
+        std::remove(copy_source);
+        return 11;
+    }
+    if (CopyFileA(copy_source, copy_destination, TRUE)) {
+        std::fprintf(stderr, "CopyFileA fail-if-exists contract failed\n");
+        std::remove(copy_source);
+        std::remove(copy_destination);
+        return 12;
+    }
+    FILE *copied = std::fopen(copy_destination, "r");
+    char copied_text[16]{};
+    if (!copied || !std::fgets(copied_text, sizeof(copied_text), copied) ||
+        std::string(copied_text) != "copy-test") {
+        std::fprintf(stderr, "copied file content mismatch\n");
+        if (copied) std::fclose(copied);
+        std::remove(copy_source);
+        std::remove(copy_destination);
+        return 13;
+    }
+    std::fclose(copied);
+    std::remove(copy_source);
+    std::remove(copy_destination);
     std::puts("PS5 host-API compatibility smoke test passed");
     return 0;
 }
