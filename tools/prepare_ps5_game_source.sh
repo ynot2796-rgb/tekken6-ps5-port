@@ -155,6 +155,29 @@ struct T6CrashInstall {
     crash_text += "\n#endif  // __PROSPERO__\n"
 crash.write_text(crash_text)
 
+
+# The optional customization research watch relies on Win32 vectored exceptions
+# and the x86 trap flag. Keep it intact on PC, but compile an explicit disabled
+# stub on PS5 instead of pretending POSIX signals are ABI-equivalent.
+research = root / "src/t6_research.cpp"
+rtext = research.read_text()
+pattern = r"LONG WINAPI CwHandler\(EXCEPTION_POINTERS\* ep\) \{.*?\n\}\n\nvoid CwStart\(uint8_t\* base, uint32_t rec, uint32_t len\) \{.*?\n\}\n\nvoid CwStop\(\) \{.*?\n\}"
+match = re.search(pattern, rtext, flags=re.S)
+if not match:
+    raise SystemExit("Could not locate Win32-only customization watch handler")
+block = match.group(0)
+if "#if !defined(__PROSPERO__)" not in block:
+    replacement = "#if !defined(__PROSPERO__)\n" + block + r"""
+#else
+void CwStart(uint8_t*, uint32_t, uint32_t) {
+  REXLOG_WARN("T6 custom watch requires Win32 vectored exceptions; disabled on PS5");
+}
+void CwStop() {}
+#endif
+"""
+    rtext = rtext[:match.start()] + replacement + rtext[match.end():]
+research.write_text(rtext)
+
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
 
