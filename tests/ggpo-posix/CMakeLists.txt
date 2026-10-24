@@ -46,7 +46,28 @@ if(T6_PS5_COMPAT_HEADER_CHECK)
   target_include_directories(t6_common_header_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
   add_library(t6_netplay_header_check OBJECT "${T6_PS5_PORT_ROOT}/tests/t6-netplay-header-smoke.cpp")
   target_include_directories(t6_netplay_header_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
-  file(GLOB T6_HOST_MODULE_SOURCES CONFIGURE_DEPENDS "${T6_REFERENCE_SOURCE}/src/t6_*.cpp")
-  add_library(t6_host_modules_check OBJECT ${T6_HOST_MODULE_SOURCES})
+  # Start with the deterministic/networking spine rather than globbing every
+  # optional Windows/UI utility. t6_research.cpp depends on Win32 SEH/VirtualProtect,
+  # while t6_practice_hud.cpp depends on ImGui; neither is a valid first-pass
+  # PS5 portability test until those platform/UI layers are ported.
+  set(T6_PS5_PORTABLE_MODULE_NAMES
+    t6_determinism.cpp
+    t6_match_setup.cpp
+    t6_net_frame.cpp
+    t6_net_state.cpp
+    t6_netplay.cpp
+    t6_resim.cpp
+    t6_session.cpp
+    t6_snapshot.cpp
+  )
+  set(T6_HOST_MODULE_SOURCES)
+  foreach(module IN LISTS T6_PS5_PORTABLE_MODULE_NAMES)
+    if(EXISTS "\${T6_REFERENCE_SOURCE}/src/\${module}")
+      list(APPEND T6_HOST_MODULE_SOURCES "\${T6_REFERENCE_SOURCE}/src/\${module}")
+    else()
+      message(FATAL_ERROR "Required port-core module missing: \${module}")
+    endif()
+  endforeach()
+  add_library(t6_host_modules_check OBJECT \${T6_HOST_MODULE_SOURCES})
   target_include_directories(t6_host_modules_check PRIVATE ${T6_PS5_COMMON_INCLUDES})
 endif()
