@@ -203,6 +203,30 @@ inline size_t VirtualQuery(const void *address, MEMORY_BASIC_INFORMATION *info, 
     }
     return sizeof(*info);
 }
+inline BOOL VirtualProtect(void *address, size_t length, DWORD new_protect, DWORD *old_protect) {
+    if (!address || !length) { errno = EINVAL; return FALSE; }
+    rex::memory::PageAccess requested;
+    switch (new_protect) {
+        case PAGE_READONLY: requested = rex::memory::PageAccess::kReadOnly; break;
+        case PAGE_READWRITE: requested = rex::memory::PageAccess::kReadWrite; break;
+        case PAGE_EXECUTE_READ: requested = rex::memory::PageAccess::kExecuteReadOnly; break;
+        case PAGE_EXECUTE_READWRITE: requested = rex::memory::PageAccess::kExecuteReadWrite; break;
+        case PAGE_NOACCESS: requested = rex::memory::PageAccess::kNoAccess; break;
+        default: errno = EINVAL; return FALSE;
+    }
+    rex::memory::PageAccess previous = rex::memory::PageAccess::kNoAccess;
+    if (!rex::memory::Protect(address, length, requested, &previous)) return FALSE;
+    if (old_protect) {
+        switch (previous) {
+            case rex::memory::PageAccess::kReadOnly: *old_protect = PAGE_READONLY; break;
+            case rex::memory::PageAccess::kReadWrite: *old_protect = PAGE_READWRITE; break;
+            case rex::memory::PageAccess::kExecuteReadOnly: *old_protect = PAGE_EXECUTE_READ; break;
+            case rex::memory::PageAccess::kExecuteReadWrite: *old_protect = PAGE_EXECUTE_READWRITE; break;
+            default: *old_protect = PAGE_NOACCESS; break;
+        }
+    }
+    return TRUE;
+}
 #endif
 
 inline DWORD GetCurrentProcessId() { return static_cast<DWORD>(::getpid()); }
