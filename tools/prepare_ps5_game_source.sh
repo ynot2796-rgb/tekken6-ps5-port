@@ -240,6 +240,55 @@ void InputDiagThread() {
 #endif
 '''
     stext = stext[:input_match.start()] + replacement + stext[input_match.end():]
+# Keep Windows-only profiling and keyboard APIs out of the Prospero compile.
+# These are optional PC diagnostics; PS5 pad input is implemented separately.
+profile_pattern = r"std::atomic<HANDLE> g_prof_main\{nullptr\};\nvoid ProfileThread\(\) \{.*?\n\}"
+profile_match = re.search(profile_pattern, stext, flags=re.S)
+if not profile_match:
+    raise SystemExit("Could not locate optional Windows-only ProfileThread")
+if "#if !defined(__PROSPERO__)" not in profile_match.group(0):
+    original = profile_match.group(0)
+    replacement = "#if !defined(__PROSPERO__)\n" + original + r'''
+#else
+std::atomic<HANDLE> g_prof_main{nullptr};
+void ProfileThread() {
+  REXLOG_WARN("T6 profiler: Windows thread-context sampling is unavailable on PS5");
+}
+#endif
+'''
+    stext = stext[:profile_match.start()] + replacement + stext[profile_match.end():]
+
+# VirtualQuery telemetry is not needed for the snapshot implementation; the
+# actual memory walker is already using ReXGlue's native page-protection query.
+virt = r'''      MEMORY_BASIC_INFORMATION mbi{};
+      VirtualQuery(g_t6_membase + a, &mbi, sizeof(mbi));
+      REXLOG_INFO("T6 net: page protection at {:08X}: {:X} (state {:X}, type {:X})", a, mbi.Protect, mbi.State, mbi.Type);'''
+if virt in stext:
+    stext = stext.replace(virt, r'''#if defined(__PROSPERO__)
+      size_t region_length = 0;
+      rex::memory::PageAccess access = rex::memory::PageAccess::kNoAccess;
+      rex::memory::QueryProtect(g_t6_membase + a, region_length, access);
+      REXLOG_INFO("T6 net: native page protection at {:08X}: {:X} (region {})", a,
+                  static_cast<unsigned>(access), region_length);
+#else
+''' + virt + r'''
+#endif''', 1)
+
+# The keyboard mapper uses Win32 foreground-window and virtual-key APIs. PS5
+# reads controller input through the guest Xam input shim; return no keyboard bits.
+key_pattern = r"uint16_t KeyBits\(int vk, bool focus, uint16_t bits\) \{.*?\n\}\n\n// XINPUT wButtons from the keyboard.*?\nuint16_t KeyboardButtons\(\) \{.*?\n\}"
+key_match = re.search(key_pattern, stext, flags=re.S)
+if not key_match:
+    raise SystemExit("Could not locate Windows keyboard input mapper")
+if "#if !defined(__PROSPERO__)" not in key_match.group(0):
+    original = key_match.group(0)
+    replacement = "#if !defined(__PROSPERO__)\n" + original + r'''
+#else
+uint16_t KeyboardButtons() { return 0; }
+#endif
+'''
+    stext = stext[:key_match.start()] + replacement + stext[key_match.end():]
+
 session.write_text(stext)
 
 cmake = root / "CMakeLists.txt"
