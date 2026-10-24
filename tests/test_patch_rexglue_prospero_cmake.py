@@ -77,7 +77,9 @@ endif()
             self.assertIn("if(REX_PLATFORM_PROSPERO)", patched)
             self.assertIn("set(REXUI_PLATFORM_SOURCES)", patched)
             self.assertIn("if(UNIX AND NOT APPLE AND NOT REX_PLATFORM_PROSPERO)", patched)
-            self.assertNotIn("pkg_check_modules(X11_XCB REQUIRED x11-xcb)", patched)
+            self.assertIn("if(UNIX AND NOT APPLE AND NOT REX_PLATFORM_PROSPERO)", patched)
+            self.assertIn("pkg_check_modules(X11_XCB REQUIRED x11-xcb)", patched)
+            self.assertIn("pkg_check_modules(WAYLAND REQUIRED wayland-client)", patched)
 
     def test_patch_is_idempotent(self):
         first, changed = self.apply(BASE)
