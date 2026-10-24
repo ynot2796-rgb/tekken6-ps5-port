@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <dlfcn.h>
+#include "intrin.h"
 #include <functional>
 #include <pthread.h>
 #include <sched.h>
@@ -26,6 +27,7 @@ using DWORD = uint32_t;
 using LONG = int32_t;
 using ULONG = uint32_t;
 using ULONGLONG = uint64_t;
+using DWORD64 = uint64_t;
 using ULONG_PTR = uintptr_t;
 using HANDLE = void *;
 using HMODULE = void *;
@@ -120,6 +122,51 @@ inline int fopen_s(FILE **file, const char *path, const char *mode) {
 }
 
 inline DWORD GetLastError() { return static_cast<DWORD>(errno); }
+
+#if defined(__PROSPERO__)
+#include <rex/memory/utils.h>
+#ifndef MEM_COMMIT
+#  define MEM_COMMIT 0x1000
+#  define MEM_RESERVE 0x2000
+#  define PAGE_NOACCESS 0x01
+#  define PAGE_READONLY 0x02
+#  define PAGE_READWRITE 0x04
+#  define PAGE_EXECUTE_READ 0x20
+#  define PAGE_EXECUTE_READWRITE 0x40
+#  define PAGE_GUARD 0x100
+#endif
+struct MEMORY_BASIC_INFORMATION {
+    void *BaseAddress = nullptr;
+    size_t RegionSize = 0;
+    DWORD State = 0;
+    DWORD Protect = 0;
+};
+inline size_t VirtualQuery(const void *address, MEMORY_BASIC_INFORMATION *info, size_t length) {
+    if (!address || !info || length < sizeof(*info)) { errno = EINVAL; return 0; }
+    const size_t page_size = rex::memory::page_size();
+    const uintptr_t page = reinterpret_cast<uintptr_t>(address) & ~(static_cast<uintptr_t>(page_size) - 1);
+    size_t region_length = 0;
+    rex::memory::PageAccess access = rex::memory::PageAccess::kNoAccess;
+    info->BaseAddress = reinterpret_cast<void *>(page);
+    if (!rex::memory::QueryProtect(reinterpret_cast<void *>(page), region_length, access) || !region_length) {
+        info->RegionSize = page_size;
+        info->State = MEM_RESERVE;
+        info->Protect = PAGE_NOACCESS;
+        return sizeof(*info);
+    }
+    info->RegionSize = region_length;
+    info->State = MEM_COMMIT;
+    switch (access) {
+        case rex::memory::PageAccess::kReadOnly: info->Protect = PAGE_READONLY; break;
+        case rex::memory::PageAccess::kReadWrite: info->Protect = PAGE_READWRITE; break;
+        case rex::memory::PageAccess::kExecuteReadOnly: info->Protect = PAGE_EXECUTE_READ; break;
+        case rex::memory::PageAccess::kExecuteReadWrite: info->Protect = PAGE_EXECUTE_READWRITE; break;
+        default: info->Protect = PAGE_NOACCESS; break;
+    }
+    return sizeof(*info);
+}
+#endif
+
 inline DWORD GetCurrentProcessId() { return static_cast<DWORD>(::getpid()); }
 
 inline DWORD GetCurrentThreadId() {
