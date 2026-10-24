@@ -199,3 +199,13 @@ Core GGPO, PS5 compatibility-header, source-audit and preflight checks remain pa
 - The patch helper is intentionally fail-closed: it only changes exactly one known linker command, tolerates an already-patched command on retries, and rejects unexpected or duplicate command layouts. Each graphics workflow runs the helper's unit tests before proceeding to title linking.
 - Source was re-read after commits to verify the helper, tests, and both workflow call sites are present. The current GitHub commit-status endpoint returned no status entries for the latest workflow commits, so no new successful CI run or artifact is claimed yet.
 - This is build-system hardening only. The RADV import/link issue still needs a successful run to prove the fix works with the pinned toolchain. No complete Tekken 6 game runtime has been linked, and no playable package or PS5 gameplay test exists yet.
+
+
+## Verified native graphics/input probe package — 24 October 2026
+
+- Workflow run https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40066666719 completed successfully on commit `a82e75f8665683b2e7d4ba3bf5d1b852e4451903`.
+- All steps passed: pinned graphics/runtime bootstrap; linker patch and unit tests; generated-title linker patch; native graphics/controller title build; package creation; artifact upload.
+- Artifact `Tekken6-PS5-render-input-probe` was uploaded (15,592,796 bytes in GitHub's artifact record), with package `PPSA99874.zip` and its SHA-256 sidecar. The artifact is available from the workflow run until 7 November 2026.
+- The title is generated from the pinned PS5 Vulkan template's 3D starter. Its documented input path uses the DualSense pad for camera sticks and D-pad settings navigation. This is a real native graphics/input *candidate package*, not yet proof of behavior on the user's console.
+- This result verifies the generated title linker route and clears the previous RADV import/link failure for this probe. It does not establish that every RADV smoke workflow passes, nor that the title boots on PS5 firmware 13.60. The next gate is installation and on-console verification of rendering, controller response, exit/relaunch stability, and runtime logs.
+- Still outstanding: native Tekken 6 generated-code integration, game-specific renderer/assets, audio, deterministic frame loop, rollback/netplay integration, package boot and gameplay validation. The public repo and CI contain no user-owned ISO, generated proprietary code, or game assets.
