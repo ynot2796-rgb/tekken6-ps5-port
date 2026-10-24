@@ -5,12 +5,16 @@ on:
     branches: [ "port/initial-scaffold" ]
     paths:
       - "tools/iso_preflight.py"
+      - "tools/xex_metadata.py"
       - "tests/test_iso_preflight.py"
+      - "tests/test_xex_metadata.py"
       - ".github/workflows/iso-import-preflight.yml"
   pull_request:
     paths:
       - "tools/iso_preflight.py"
+      - "tools/xex_metadata.py"
       - "tests/test_iso_preflight.py"
+      - "tests/test_xex_metadata.py"
       - ".github/workflows/iso-import-preflight.yml"
   workflow_dispatch:
 
@@ -22,5 +26,5 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Run synthetic ISO structure tests
-        run: python3 -m unittest discover -s tests -p 'test_iso_preflight.py' -v
+      - name: Run ISO structure and XEX metadata tests
+        run: python3 -m unittest discover -s tests -p 'test_*preflight.py' -v && python3 -m unittest discover -s tests -p 'test_xex_metadata.py' -v
