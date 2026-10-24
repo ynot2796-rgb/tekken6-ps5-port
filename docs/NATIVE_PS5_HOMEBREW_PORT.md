@@ -60,4 +60,4 @@ A native build does not itself solve matchmaking. The public source says officia
 
 ## Current status
 
-A diagnostic source and automated package build are committed. The first CI attempts exposed a missing optional build tool (ccache); the workflow was updated to install Ninja and disable the optional cache. The newest build run is in progress. Neither a passing build nor a console launch on firmware 13.60 has been confirmed yet.
+A minimal diagnostic title has been built and packaged by CI, then launched by the user through their ShadowMountPlus setup on firmware 13.60. The user reports a black screen without an immediate crash; that diagnostic intentionally loops after startup, so it proves process liveness only—not rendering, input, audio, or game integration. Separately, the GGPO source has passed a host-side POSIX smoke test and its static library has cross-compiled for the PS5 target in an earlier successful CI run. Current CI is being used to validate the PS5 compatibility headers and the deterministic/netplay game modules. The full Tekken 6 executable remains unbuilt and untested.
