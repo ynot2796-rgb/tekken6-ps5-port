@@ -182,3 +182,12 @@ Do not claim a playable port until a native title is linked, packaged, launched 
   - Reference audit: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368316
 - A fresh rebuild of the pinned PS5 graphics/runtime stack is now running at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368326; at this checkpoint it is still in the bootstrap stage, so no renderer artifact is claimed.
 - This work remains component-level. A bootable native Tekken 6 title still requires the renderer/title link route to succeed, user-owned generated game source to be integrated locally, and console validation. No copyrighted game source or assets are committed to the public repository.
+
+
+## Fresh native renderer attempt — 24 October 2026
+
+The second graphics/input probe attempt reached the native title linker: all 29 C/C++ compilation steps completed, but packaging was skipped because linking failed again with `error: no public SDK stub exports required symbol radv_EnumeratePhysicalDevices`. Run: https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368326.
+
+This confirms the earlier failure is reproducible and isolated to native linking/import validation rather than compilation. Do not add a dummy Vulkan symbol or call this a successful title. The next engineering step is to inspect the pinned native tool's import validation and ensure the RADV archive, title template, Payload SDK fork, and PS5_Vulkan link recipe are a compatible set at fixed revisions. Current public PS5_Vulkan's own RADV link recipe whole-archives its Mesa driver and binds platform libc symbols locally; use that as a consistency reference, not as proof that simply changing a URL fixes the mismatch.
+
+Core GGPO, PS5 compatibility-header, source-audit and preflight checks remain passing, but there is still no packaged renderer probe and no generated Tekken game executable. Game source/data and game-specific renderer/runtime integration remain separate required milestones.
