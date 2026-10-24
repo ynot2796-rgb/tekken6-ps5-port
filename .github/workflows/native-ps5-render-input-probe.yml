@@ -35,12 +35,16 @@ jobs:
           clang-18 --version
           glslangValidator --version
 
-      - name: Bootstrap the pinned PS5 graphics/runtime stack
+      - name: Seed the pinned graphics repository's build-only environment
         working-directory: PS5_VulkanTemplate
         run: |
-          # Bootstrap expects the console address to exist, but this workflow only builds.
-          mkdir -p ../PS5_Vulkan/.env-placeholder
-          bash ps5/tools/bootstrap.sh
+          # The upstream bootstrap checks for a console host even for a build-only run.
+          git clone https://github.com/mihawk-99/PS5_Vulkan.git ../PS5_Vulkan
+          printf 'PS5_HOST=127.0.0.1\n' > ../PS5_Vulkan/.env
+
+      - name: Bootstrap the pinned PS5 graphics/runtime stack
+        working-directory: PS5_VulkanTemplate
+        run: bash ps5/tools/bootstrap.sh
 
       - name: Generate a Tekken-labelled visible graphics and controller probe
         working-directory: PS5_VulkanTemplate
