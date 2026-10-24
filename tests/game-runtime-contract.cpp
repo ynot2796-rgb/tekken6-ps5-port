@@ -56,10 +56,31 @@ int main() {
   assert(captured.left_x == -32768 && captured.left_y == 0);
   assert(captured.right_x == 32767 && captured.right_y == 0);
   assert(captured.left_trigger == 42 && captured.right_trigger == 200);
+
+  // Values immediately around center remain signed and deterministic.
+  assert(normalize_axis(127) == -256);
+  assert(normalize_axis(128) == 0);
+  assert(normalize_axis(129) == 258);
+
+  // Once captured, frame input is a value snapshot; later hardware changes
+  // must not mutate it. Rollback reuses this value instead of polling again.
+  pad.game_buttons = 0;
+  pad.left_x = 128;
+  assert(captured.buttons == 0x1234 && captured.left_x == -32768);
+
+  // Disconnection must neutralize every gameplay control, not just buttons.
   pad.connected = false;
+  pad.left_x = 0;
+  pad.left_y = 255;
+  pad.right_x = 0;
+  pad.right_y = 255;
+  pad.left_trigger = 255;
+  pad.right_trigger = 255;
   const FrameInput disconnected = capture_frame_input(pad, 0);
   assert(disconnected.buttons == 0 && disconnected.left_x == 0 &&
-         disconnected.left_y == 0 && disconnected.left_trigger == 0);
+         disconnected.left_y == 0 && disconnected.right_x == 0 &&
+         disconnected.right_y == 0 && disconnected.left_trigger == 0 &&
+         disconnected.right_trigger == 0 && disconnected.player == 0);
 
   // Missing mandatory callbacks must fail closed before the runtime starts.
   auto incomplete = callbacks;
