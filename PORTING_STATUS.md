@@ -122,3 +122,24 @@ Verification: [Game runtime adapter contract CI](https://github.com/ynot2796-rgb
 Commit `39bda158c26f2d43703278248660aaf9cc451464` wires the new game-runtime contract header into the existing PS5-target C++ header smoke test. The Prospero cross-compile job now checks the 16-byte frame-input ABI and compile-time callback contract on the PS5 toolchain as well as the host CI smoke test. [PS5 compatibility header workflow](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063318142)
 
 This is still a boundary-validation milestone, not the game integration itself. The next critical task is implementing against the actual ReXGlue-generated game entry points and its existing snapshot machinery. Upstream `t6_snapshot.cpp` shows why this cannot be treated as a generic memory-copy callback: the existing snapshot path synchronizes worker threads and GPU/draw-idle state, and its memory walker relies on host-specific page queries. Those constraints must be preserved or deliberately replaced by a native renderer/runtime design before rollback can be trusted.
+
+## Verified CI checkpoint — 24 October 2026
+
+At commit `3229a0a94b684881c8eee7592da628d9c53c3d75`, the latest GitHub Actions runs have completed successfully:
+
+- [GGPO PS5 cross-compile](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063332049) — PS5-target static library plus compatibility/game-side module compilation.
+- [GGPO POSIX port compile test](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063332038) — host compile/link test.
+- [PS5 compatibility header smoke test](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063332120).
+- [Reference source audit](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063332094).
+- [Game runtime adapter contract](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063335248).
+- [Socket portability test](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063335176) and [ISO import preflight](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40063335245).
+
+These are successful source/compile/contract checks, not a complete game link or console gameplay test.
+
+### Source-preparation and integration audit
+
+Reviewed `tools/prepare_ps5_game_source.sh`, `tools/apply_ggpo_posix_overlay.sh`, `tests/ggpo-posix/CMakeLists.txt`, and the pinned PS5X360 v1.0.2 native entry/build recipe. The PS5 preparation script is already invoked by the cross-compile workflow, so adding a duplicate preparation workflow would not increase coverage. It currently patches platform selection, libc++ compatibility, snapshot page protection, crash handling and optional Windows-only diagnostics, while compiling the deterministic/netplay/resimulation/snapshot source modules.
+
+The next real milestone is a **native shell link/package adapted from the pinned PS5X360 title recipe**, not another GGPO-only test. Its current entry point depends on Xenia's emulator, window/presenter, Xenos graphics and Xenia audio interfaces; those are not drop-in services for ReXGlue-generated native game code. The link recipe is a reference for SDK/RADV/Prospero packaging only. The port still needs a compatible native presentation/input/audio boundary and a generated-game adapter built from the user's own compatible Tekken 6 image.
+
+Do not claim a playable port until a native title is linked, packaged, launched on the user's PS5, and shows a visible frame; controller/gameplay, audio, and rollback then need separate validation. Keep proprietary generated game sources and assets local.
