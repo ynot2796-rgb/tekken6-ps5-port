@@ -116,6 +116,45 @@ if "#if defined(__PROSPERO__)" not in original:
     ntext = ntext[:match.start()] + replacement + ntext[match.end():]
 netplay.write_text(ntext)
 
+
+# Windows vectored-exception handling is unavailable on PS5; install POSIX fatal
+# signal handlers while keeping the detailed Win32 handler for the PC build.
+crash = root / "src/t6_crash.cpp"
+crash_text = crash.read_text()
+if "#if defined(__PROSPERO__)" not in crash_text:
+    marker = '#include "t6_netplay_internal.h"\n'
+    if marker not in crash_text:
+        raise SystemExit("Could not locate crash-handler include")
+    ps5_handler = r'''
+#if defined(__PROSPERO__)
+#include <csignal>
+#include <cstdlib>
+namespace t6np {
+static void T6CrashSignal(int signal_number) {
+  REXLOG_ERROR("T6 crash: PS5 host signal {}", signal_number);
+  if (auto fn = T6Rex().current_guest_context) {
+    if (auto* c = static_cast<PPCContext*>(fn())) {
+      REXLOG_ERROR("T6 crash: guest lr {:08X} r1 {:08X} r3 {:08X} r4 {:08X} r30 {:08X} r31 {:08X}",
+                   static_cast<uint32_t>(c->lr), c->r1.u32, c->r3.u32, c->r4.u32, c->r30.u32, c->r31.u32);
+    }
+  }
+  std::abort();
+}
+struct T6CrashInstall {
+  T6CrashInstall() {
+    std::signal(SIGSEGV, T6CrashSignal);
+    std::signal(SIGBUS, T6CrashSignal);
+    std::signal(SIGILL, T6CrashSignal);
+    std::signal(SIGFPE, T6CrashSignal);
+  }
+} g_t6_crash_install;
+}  // namespace t6np
+#else
+'''
+    crash_text = crash_text.replace(marker, marker + ps5_handler, 1)
+    crash_text += "\n#endif  // __PROSPERO__\n"
+crash.write_text(crash_text)
+
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
 
