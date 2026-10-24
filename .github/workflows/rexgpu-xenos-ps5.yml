@@ -79,10 +79,17 @@ jobs:
             -DSDL_JACK=OFF \
             -DSDL_OSS=OFF \
             -DCMAKE_BUILD_TYPE=Release
-      - name: Build Xenos Vulkan renderer only
+      - name: Compile Xenos Vulkan renderer objects without linking runtime
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
           PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
           set -euo pipefail
-          cmake --build .work/rexglue-ps5-build --target rexgpu-xenos --parallel 2
+          BUILD=.work/rexglue-ps5-build
+          mapfile -t TARGETS < <(ninja -C "$BUILD" -t targets all | sed -n 's#^\\(.*CMakeFiles/rexgpu-xenos\\.dir/.*\\.o\\): .*#\\1#p')
+          if [ "${#TARGETS[@]}" -eq 0 ]; then
+            echo "Could not discover Xenos renderer object targets" >&2
+            exit 2
+          fi
+          printf 'Compiling %s renderer object targets without linking rexruntime.\\n' "${#TARGETS[@]}"
+          ninja -C "$BUILD" --parallel 2 "${TARGETS[@]}"
