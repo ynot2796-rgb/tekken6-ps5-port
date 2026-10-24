@@ -54,7 +54,7 @@ jobs:
       - name: Generate a Tekken-labelled visible graphics and controller probe
         working-directory: PS5_VulkanTemplate
         run: |
-          python3 ps5/tools/new-title.py ../t6-render-input-probe --title-id PPSA99873 --name "Tekken 6 Port Probe" --refresh 60
+          python3 ps5/tools/new-title.py ../t6-render-input-probe --title-id PPSA99874 --name "Tekken 6 Port Probe" --refresh 60
           test -s ../t6-render-input-probe/ps5/tools/build.sh
           test -s ../t6-render-input-probe/examples/starter/main.cpp || find ../t6-render-input-probe/examples -maxdepth 2 -type f | head -80
 
@@ -64,22 +64,22 @@ jobs:
           PS5_VULKAN_DIR: ${{ github.workspace }}/PS5_Vulkan
         run: |
           bash ps5/tools/build.sh
-          test -s dist/PPSA99873/eboot.bin
-          test -s dist/PPSA99873/sce_sys/param.json
+          test -s dist/PPSA99874/eboot.bin
+          test -s dist/PPSA99874/sce_sys/param.json
 
       - name: Package native title for console testing
         run: |
           cd t6-render-input-probe/dist
-          zip -qr PPSA99873.zip PPSA99873
-          sha256sum PPSA99873.zip | tee PPSA99873.zip.sha256
-          test -s PPSA99873.zip
+          zip -qr PPSA99874.zip PPSA99874
+          sha256sum PPSA99874.zip | tee PPSA99874.zip.sha256
+          test -s PPSA99874.zip
 
       - name: Upload native probe artifact
         uses: actions/upload-artifact@v4
         with:
           name: Tekken6-PS5-render-input-probe
           path: |
-            t6-render-input-probe/dist/PPSA99873.zip
-            t6-render-input-probe/dist/PPSA99873.zip.sha256
+            t6-render-input-probe/dist/PPSA99874.zip
+            t6-render-input-probe/dist/PPSA99874.zip.sha256
           if-no-files-found: error
           retention-days: 14
