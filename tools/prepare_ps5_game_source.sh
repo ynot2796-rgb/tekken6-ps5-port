@@ -296,7 +296,10 @@ session.write_text(stext)
 # toolchain accidentally select the Linux implementation.
 # Explicitly patch the pinned SDK's platform selection; the helper is idempotent and fails closed on drift.
 import subprocess
-subprocess.run([sys.executable, str(root / "tools/patch_rexglue_prospero_cmake.py"), str(sdk)], check=True)
+port_root = Path(os.environ.get("T6_PS5_PORT_ROOT", ""))
+if not port_root.is_dir() or not (port_root / "tools/patch_rexglue_prospero_cmake.py").is_file():
+    raise SystemExit("T6_PS5_PORT_ROOT must point to this port repository and its CMake patch helper")
+subprocess.run([sys.executable, str(port_root / "tools/patch_rexglue_prospero_cmake.py"), str(sdk)], check=True)
 
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
