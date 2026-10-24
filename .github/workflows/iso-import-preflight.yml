@@ -1,0 +1,26 @@
+name: ISO import preflight tests
+
+on:
+  push:
+    branches: [ "port/initial-scaffold" ]
+    paths:
+      - "tools/iso_preflight.py"
+      - "tests/test_iso_preflight.py"
+      - ".github/workflows/iso-import-preflight.yml"
+  pull_request:
+    paths:
+      - "tools/iso_preflight.py"
+      - "tests/test_iso_preflight.py"
+      - ".github/workflows/iso-import-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  iso-preflight:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run synthetic ISO structure tests
+        run: python3 -m unittest discover -s tests -p 'test_iso_preflight.py' -v
