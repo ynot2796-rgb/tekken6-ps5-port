@@ -108,3 +108,14 @@ Inspection of the full CI command line narrows the failure further. All 29 objec
 Do not treat the SDK-pin alignment experiment as a fix. The template explicitly pins SDK fork revision `611893fc25ef3e138f5bc2c90d829d8b58174cd2`, whose platform layer includes the `ps5_localeconv` and related libc bindings expected by the RADV title link recipe. PS5_Vulkan's own host tools separately pin `b83202be73e930050e00de0f1b4d9ec46c0391bf`; these are distinct roles in the upstream bootstrap, not evidence that the title SDK should be downgraded. The workflow has been restored to the template's documented SDK pin.
 
 Next investigation: inspect the exact `ps5-native-tool` linker's stub-resolution rules and the RADV archive's exported/undefined symbols at the pinned Mesa revision. Compare with the upstream project's own RADV smoke title, which uses the same RADV link recipe but links a small C smoke-test object and an explicit C++ runtime object. A defensible fix must identify whether the problematic RADV-prefixed symbol is an archive export, an undefined reference, or an entry-point alias expected by the converter; no fake SDK stub should be added.
+
+
+## Build pipeline correction — 24 October 2026
+
+The render/input probe workflow was updated after the RADV smoke-title linker investigation:
+
+- Pin the sibling `PS5_Vulkan` checkout to `f410e67a0241b3e8edcdbcd2a9b285dfc4a412ed`, rather than following its moving default branch.
+- Reuse cached outputs for the pinned RADV release archive, payload SDK, native host tool, control payload, and `libc.prx` across CI retries.
+- Patch the pinned upstream `tools/build-radv-title.sh` link invocation to pass `--no-dynamic-linker`, using a strict one-match guard. This follows the documented LLVM 18 weak-entry-point workaround and fails rather than silently drifting if upstream changes the command.
+
+The same workaround is now present in both `native-ps5-radv-smoke.yml` and `native-ps5-render-input-probe.yml`. The workflows have been checked in source for the pinned revision, cache step, patch string, and step order. **A successful CI rerun and an installable artifact are still unverified**; the prior failures did not produce packages. Do not mark the visible-render/controller milestone complete until a package is built and physically tested on the target PS5.
