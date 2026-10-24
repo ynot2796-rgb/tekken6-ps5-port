@@ -19,6 +19,16 @@ The upstream Native Online source documents a user-owned **USA or Europe, Rev 1,
 5. **Validate and commit install** — verify required game data, generated-code/runtime version compatibility, and required files before atomically promoting the staged install. On failure, keep the source untouched and show a recoverable error.
 6. **Launch** — start the native PS5 runtime and show actionable diagnostics if initialization fails. Cache successfully prepared data so the ISO does not need to be processed again on every launch.
 
+## Current inspection tool
+
+`tools/game_image_report.py` combines the structural XDVDFS preflight, root `default.xex` lookup, XEX execution metadata parsing, and a SHA-256 fingerprint of the executable. Run it against a user-owned image in a development environment with Python 3:
+
+```sh
+python3 tools/game_image_report.py /path/to/your-owned-game.iso
+```
+
+The JSON report intentionally keeps `game_identity_verified`, `revision_verified`, and `import_ready` set to `false`. The hash is a fingerprint for comparison against a trusted, verified reference; a hash alone does not establish game identity, region, or revision. This tool is a developer-side validation step, not yet the PS5 in-app importer.
+
 ## Acceptance tests
 
 - Supported ISO is identified correctly; unsupported region/revision and corrupt images are rejected with readable messages.
