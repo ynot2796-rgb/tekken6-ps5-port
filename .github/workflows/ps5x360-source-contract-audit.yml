@@ -1,0 +1,45 @@
+name: Audit pinned PS5X360 reuse contracts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["port/initial-scaffold"]
+    paths:
+      - "tools/audit_ps5x360_reference.py"
+      - "docs/PS5X360_COMPONENT_COMPATIBILITY_MATRIX.md"
+      - ".github/workflows/ps5x360-source-contract-audit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Tekken port
+        uses: actions/checkout@v4
+
+      - name: Checkout exact PS5X360 v1.0.2 source baseline
+        uses: actions/checkout@v4
+        with:
+          repository: BrinooTk/PS5X360
+          ref: 0a178708ea2138413eea60eb7625496457455137
+          path: PS5X360
+          persist-credentials: false
+
+      - name: Verify release pin and platform contracts
+        run: |
+          test "$(git -C PS5X360 rev-parse HEAD)" = "0a178708ea2138413eea60eb7625496457455137"
+          python3 tools/audit_ps5x360_reference.py PS5X360
+
+      - name: Record audited source revision
+        run: |
+          {
+            echo "## PS5X360 source contract audit"
+            echo
+            echo "- Reference: `BrinooTk/PS5X360`"
+            echo "- Pinned commit: `0a178708ea2138413eea60eb7625496457455137`"
+            echo "- Scope: source markers for native entry point, PS5 memory wrappers, native linker recipe, and Prospero platform patch."
+            echo "- Limitation: this audit is not a PS5 title build, ReXGlue link, or console test."
+          } >> "$GITHUB_STEP_SUMMARY"
