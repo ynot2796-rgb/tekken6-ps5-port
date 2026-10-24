@@ -7,6 +7,8 @@ on:
       - "tools/patch_rexglue_prospero_cmake.py"
       - ".github/workflows/rexgpu-xenos-ps5.yml"
       - "tools/prepare_reference_sources.sh"
+      - "patches/**"
+      - "patches/**"
   pull_request:
     paths:
       - "tools/patch_rexglue_prospero_cmake.py"
@@ -35,7 +37,11 @@ jobs:
           git -C .work/reference-sources/rexglue-sdk submodule sync --recursive
           git -C .work/reference-sources/rexglue-sdk submodule update --init --recursive --depth 1
       - name: Patch pinned ReXGlue platform selection for Prospero
-        run: python3 tools/patch_rexglue_prospero_cmake.py .work/reference-sources/rexglue-sdk
+        run: |
+          set -euo pipefail
+          SDK=.work/reference-sources/rexglue-sdk
+          git -C "$SDK" apply "$GITHUB_WORKSPACE/patches/rexglue-v0.10.0-ps5.patch"
+          git -C "$SDK/thirdparty/FFmpeg" apply "$GITHUB_WORKSPACE/patches/rexglue-ffmpeg-ps5-config.patch"
       - name: Export pinned PS5 SDK fork
         env:
           SDK_REVISION: b5efad528e0ac1b8289f39d72a0e890ff68ff0a6
@@ -58,7 +64,7 @@ jobs:
           cmake -S .work/reference-sources/rexglue-sdk -B .work/rexglue-ps5-build -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/.work/reference-sources/prospero-recomp-reference/prospero/ps5-toolchain.cmake" \
             -DPS5_PAYLOAD_SDK="$PS5_PAYLOAD_SDK" \
-            -DREX_PLATFORM_PROSPERO=ON \
+            -DPROSPERO=ON \
             -DREXGLUE_USE_D3D12=OFF \
             -DREXGLUE_USE_VULKAN=ON \
             -DREXGLUE_ENABLE_TRACY=OFF \
