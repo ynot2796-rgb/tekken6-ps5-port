@@ -19,6 +19,7 @@ for dep in fmt simde spdlog; do
 done
 python3 - "$SOURCE" "$SDK" <<'PY'
 from pathlib import Path
+import os
 import sys
 root = Path(sys.argv[1])
 sdk = Path(sys.argv[2])
