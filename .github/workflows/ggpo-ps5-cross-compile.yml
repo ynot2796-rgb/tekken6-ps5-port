@@ -60,7 +60,7 @@ jobs:
           if-no-files-found: error
       - name: Compile PS5 compatibility and game host modules
         env:
-          PS5_PAYLOAD_SDK: \${{ github.workspace }}/.work/ps5-sdk
+          PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
           LLVM_CONFIG: /usr/lib/llvm-18/bin/llvm-config
           PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
