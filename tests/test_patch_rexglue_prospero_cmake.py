@@ -104,6 +104,16 @@ endif()
             self.assertIn('#include "config_linux_x86_64.h"', patched)
             self.assertFalse(MODULE.patch_ffmpeg_config(sdk))
 
+    def test_replaces_ffmpeg_malloc_header_for_prospero_sdk(self):
+        with tempfile.TemporaryDirectory() as directory:
+            sdk = Path(directory)
+            allocator = sdk / "thirdparty" / "FFmpeg" / "libavutil" / "mem.c"
+            allocator.parent.mkdir(parents=True)
+            allocator.write_text("#include <malloc.h>\\nvoid f(void) {}\\n", encoding="utf-8")
+            self.assertTrue(MODULE.patch_ffmpeg_malloc_header(sdk))
+            self.assertIn("#include <stdlib.h>", allocator.read_text(encoding="utf-8"))
+            self.assertFalse(MODULE.patch_ffmpeg_malloc_header(sdk))
+
     def test_fails_closed_if_platform_block_drifts(self):
         with self.assertRaises(ValueError):
             self.apply(BASE.replace('set(REX_PLATFORM "win-amd64")', 'set(REX_PLATFORM "windows-x64")'))
