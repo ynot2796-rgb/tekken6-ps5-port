@@ -31,6 +31,18 @@ jobs:
           printf 'PS5_HOST=127.0.0.1\n' > ../PS5_Vulkan/.env
           git -C ../PS5_Vulkan rev-parse HEAD
 
+      - name: Restore pinned native toolchain and RADV build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            PS5_Vulkan/.deps/native/radv-release
+            PS5_Vulkan/.deps/native/ps5-payload-sdk
+            PS5_Vulkan/build/host
+            PS5_Vulkan/build/ps5vkctl
+            PS5_Vulkan/runtime/libc.prx
+            PS5_Vulkan/runtime/libc.prx.sha256
+          key: ps5-radv-${{ runner.os }}-v1-ps5vulkan-f410e67a-sdk-611893fc-mesa-pinned-release
+
       - name: Install host build dependencies
         run: |
           sudo apt-get update
