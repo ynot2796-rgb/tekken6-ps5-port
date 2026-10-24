@@ -92,3 +92,10 @@ https://github.com/LoZazaMastro/TheSimpsonsGame-PS5-Builder/blob/main/tools/rexg
 That BSD-3-Clause implementation owns the native pad lifecycle, calls `scePadReadState` into the SDK's typed `PadData`, maps through `MapPadState`, handles device-not-connected/reconnect cases, and exposes XInput-style state to recompiled code. It is a candidate for reuse only after matching the chosen ReXGlue revision, required headers, SDK version, and license notices. It should be preferred over the PS5X360 sample's hard-coded raw pad byte offsets when the same typed adapter is available.
 
 **Current gate:** resolve native renderer import/link compatibility and produce a visible, controller-responsive native title. Only then integrate the generated Tekken runtime and game renderer. No Tekken gameplay package is currently available.
+
+
+## Second probe attempt — 24 October 2026
+
+Run https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40064368326 compiled all 29 title objects and failed at the same final link check: `no public SDK stub exports required symbol radv_EnumeratePhysicalDevices`. No package artifact was produced. The failure is reproducible; treat it as a toolchain/link-contract problem until the import is traced to its declaring object and expected resolution. Do not add a stub that returns fake device data: that would hide the error and leave the renderer nonfunctional.
+
+The workflow currently combines a pinned PS5_VulkanTemplate revision with a separately cloned PS5_Vulkan checkout. Before another expensive full build, pin and compare the template's expected RADV archive, native linker tool, PayloadSDK fork, and link recipe revisions as one set, then validate the failing symbol against the actual archive and SDK stub tables. The latest public PS5_Vulkan link recipe uses whole-archive for RADV plus a matching platform layer; this is a useful reference for the audit, not yet a verified fix. No visible-render or controller test can happen until an artifact is produced and installed on firmware 13.60.
