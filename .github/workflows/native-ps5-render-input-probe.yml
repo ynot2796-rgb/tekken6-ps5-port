@@ -74,13 +74,11 @@ jobs:
           test -s ../PS5_Vulkan/runtime/libc.prx
           test -s ../PS5_Vulkan/build/ps5vkctl/ps5vkctl.elf
 
-      - name: Patch and test both LLVM 18 RADV link commands
+      - name: Patch and test the pinned RADV smoke-title link command
         run: |
           python3 tools/patch_radv_linker.py PS5_Vulkan/tools/build-radv-title.sh
-          python3 tools/patch_radv_linker.py PS5_VulkanTemplate/ps5/tools/link-title.sh
           python3 tests/test_patch_radv_linker.py
           grep -F -- '--no-dynamic-linker' PS5_Vulkan/tools/build-radv-title.sh
-          grep -F -- '--no-dynamic-linker' PS5_VulkanTemplate/ps5/tools/link-title.sh
 
       - name: Configure generated-project Git identity
         run: |
@@ -93,6 +91,15 @@ jobs:
           python3 ps5/tools/new-title.py ../t6-render-input-probe --title-id PPSA99874 --name "Tekken 6 Port Probe" --refresh 60
           test -s ../t6-render-input-probe/ps5/tools/build.sh
           test -s ../t6-render-input-probe/examples/starter/main.cpp || find ../t6-render-input-probe/examples -maxdepth 2 -type f | head -80
+
+      - name: Patch generated title linker after template export
+        working-directory: t6-render-input-probe
+        run: |
+          # new-title.py exports from git HEAD, so working-tree edits to the template
+          # are not inherited. Patch the actual generated title's linker script.
+          python3 "$GITHUB_WORKSPACE/tools/patch_radv_linker.py" ps5/tools/link-title.sh
+          grep -F -- '--no-dynamic-linker' ps5/tools/link-title.sh
+          python3 "$GITHUB_WORKSPACE/tests/test_patch_radv_linker.py"
 
       - name: Build native graphics/controller probe
         working-directory: t6-render-input-probe
