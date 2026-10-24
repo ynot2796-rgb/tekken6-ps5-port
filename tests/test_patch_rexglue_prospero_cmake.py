@@ -88,6 +88,20 @@ endif()
             self.assertFalse(MODULE.patch_cmake(path))
             self.assertEqual(path.read_text(encoding="utf-8"), first)
 
+    def test_adds_posix_config_fallback_for_prospero_ffmpeg(self):
+        with tempfile.TemporaryDirectory() as directory:
+            sdk = Path(directory)
+            ffmpeg = sdk / "thirdparty" / "FFmpeg"
+            ffmpeg.mkdir(parents=True)
+            config = ffmpeg / "config.h"
+            config.write_text("#if defined(__gnu_linux__)\\n#include \\"config_linux_x86_64.h\\"\\n#elif defined(__ANDROID__)\\n#error \\"no config\\"\\n#endif\\n", encoding="utf-8")
+            (ffmpeg / "config_linux_x86_64.h").write_text("#define HAVE_ROUND 1\\n", encoding="utf-8")
+            self.assertTrue(MODULE.patch_ffmpeg_config(sdk))
+            patched = config.read_text(encoding="utf-8")
+            self.assertIn("#elif defined(__FreeBSD__) || defined(__PROSPERO__)", patched)
+            self.assertIn('#include "config_linux_x86_64.h"', patched)
+            self.assertFalse(MODULE.patch_ffmpeg_config(sdk))
+
     def test_fails_closed_if_platform_block_drifts(self):
         with self.assertRaises(ValueError):
             self.apply(BASE.replace('set(REX_PLATFORM "win-amd64")', 'set(REX_PLATFORM "windows-x64")'))
