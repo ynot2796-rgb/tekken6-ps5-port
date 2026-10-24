@@ -16,8 +16,6 @@
 #include <unistd.h>
 
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <sched.h>
 
 
 #include <csignal>
@@ -26,35 +24,6 @@ inline void OutputDebugStringA(const char *message) {
 }
 inline void DebugBreak() { ::raise(SIGTRAP); }
 
-
-/* Minimal Win32 file/yield compatibility used by the upstream game layer. */
-inline bool CopyFileA(const char *source, const char *destination, int fail_if_exists) {
-    if (!source || !destination) { errno = EINVAL; return false; }
-    int in = ::open(source, O_RDONLY);
-    if (in < 0) return false;
-    const int flags = O_WRONLY | O_CREAT | (fail_if_exists ? O_EXCL : O_TRUNC);
-    int out = ::open(destination, flags, 0666);
-    if (out < 0) { ::close(in); return false; }
-    bool ok = true;
-    char buffer[16384];
-    while (ok) {
-        const ssize_t n = ::read(in, buffer, sizeof(buffer));
-        if (n == 0) break;
-        if (n < 0) { if (errno == EINTR) continue; ok = false; break; }
-        ssize_t offset = 0;
-        while (offset < n) {
-            const ssize_t written = ::write(out, buffer + offset, static_cast<size_t>(n - offset));
-            if (written < 0 && errno == EINTR) continue;
-            if (written <= 0) { ok = false; break; }
-            offset += written;
-        }
-    }
-    if (::close(in) != 0) ok = false;
-    if (::close(out) != 0) ok = false;
-    if (!ok) ::unlink(destination);
-    return ok;
-}
-inline bool SwitchToThread() { return ::sched_yield() == 0; }
 
 #ifndef MAX_PATH
 #  define MAX_PATH 4096
