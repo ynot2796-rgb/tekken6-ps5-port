@@ -47,6 +47,7 @@ int main() {
     }
     std::remove("/tmp/t6-ps5-compat-smoke.out");
     Sleep(0);
+    YieldProcessor();
     if (!SwitchToThread()) {
         std::fprintf(stderr, "thread-yield shim failed\n");
         return 9;
