@@ -56,7 +56,7 @@ Rather than inventing a renderer or guessing at controller APIs, the repository 
 has `.github/workflows/native-ps5-render-input-probe.yml`. It checks out
 [Mihawk's PS5 Vulkan Template](https://github.com/mihawk-99/PS5_VulkanTemplate)
 at fixed commit `91179df760df1e6c6f2d4d172bc435319d79ff3c`, bootstraps its matching
-PS5_Vulkan / Mesa / PayloadSDK stack, generates a separate `PPSA99873` title named
+PS5_Vulkan / Mesa / PayloadSDK stack, generates a separate `PPSA99874` title named
 `Tekken 6 Port Probe` from the upstream 3D starter, and packages the result as a
 GitHub Actions artifact. This reuses the upstream title lifecycle, RADV/Vulkan
 rendering, DualSense platform layer, and build/package scripts instead of copying
