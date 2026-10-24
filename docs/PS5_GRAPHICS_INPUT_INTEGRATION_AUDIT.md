@@ -128,3 +128,12 @@ The corrected workflow completed successfully: https://github.com/ynot2796-rgb/t
 This closes the CI package-build gate for the template-based native probe and demonstrates the link-script fix works for that generated title. The probe is based on the PS5 Vulkan template's 3D starter, whose documented controls use the pad sticks for the camera and D-pad for settings navigation. CI success alone does not prove actual render/input behavior on firmware 13.60; that requires installing and running this artifact on the target console.
 
 Next: on-console rendering/input test, then make the Tekken source-generation path repeatable using a user-owned compatible game image. No Tekken 6 native executable or gameplay package has been produced yet. Do not confuse the probe artifact with the finished game.
+
+
+## Repeat build and next SDK gate — 24 October 2026
+
+The corrected render/input probe passed a second time at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40067130875 and uploaded another artifact. This is repeatable CI evidence for the template-based PS5 native title build. The package still needs physical console testing to verify its display and controller behavior.
+
+A separate guarded helper, `tools/patch_rexglue_prospero_cmake.py`, now patches the pinned ReXGlue SDK's platform selection to expose an explicit Prospero option and avoid ELF RPATH configuration. Its regression tests passed at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/40067358848. This does not yet prove that ReXGlue itself builds for Prospero; it only prepares a controlled next step.
+
+The pinned ReXGlue source has a Xenos Vulkan backend, so the next native-game milestone is to compile its Vulkan/Xenos plugin and runtime with the PS5 toolchain, then close the SDK's missing Prospero platform services and Native Online's OS-specific APIs. No generated Tekken code has been included in CI.
