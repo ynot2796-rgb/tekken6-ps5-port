@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <dlfcn.h>
+#include <functional>
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>
@@ -120,6 +121,14 @@ inline int fopen_s(FILE **file, const char *path, const char *mode) {
 
 inline DWORD GetLastError() { return static_cast<DWORD>(errno); }
 inline DWORD GetCurrentProcessId() { return static_cast<DWORD>(::getpid()); }
+
+inline DWORD GetCurrentThreadId() {
+    return static_cast<DWORD>(std::hash<pthread_t>{}(::pthread_self()));
+}
+[[noreturn]] inline void ExitProcess(DWORD exit_code) {
+    std::exit(static_cast<int>(exit_code));
+}
+
 inline HANDLE GetCurrentProcess() { return reinterpret_cast<HANDLE>(static_cast<uintptr_t>(-1)); }
 inline HANDLE GetCurrentThread() { return nullptr; }
 
