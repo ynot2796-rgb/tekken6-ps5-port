@@ -8,6 +8,10 @@ on:
       - ".github/workflows/native-ps5-render-input-probe.yml"
       - "docs/PS5_GRAPHICS_INPUT_INTEGRATION_AUDIT.md"
 
+concurrency:
+  group: tekken6-native-render-input-probe
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
