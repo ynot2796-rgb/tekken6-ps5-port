@@ -27,7 +27,9 @@ The public header is `include/rex/runtime.h`. The entry point is the `rex::Runti
 3. `RuntimeConfig::graphics` can be omitted for a headless/tool runtime, but the Tekken Xenos path requires a compatible Xenos graphics backend and native presentation integration.
 4. The runtime owns the guest memory, virtual filesystem, kernel state, dispatcher and export resolver after setup. Do not create duplicate global instances.
 5. The Xenos renderer is not a standalone title renderer: it is a guest-GPU plugin and depends on the runtime's GPU interfaces and native presentation path.
-6. The runtime CMake target is declared as `SHARED` in `src/system/CMakeLists.txt`. The produced PS5 link artifacts must be inspected before deciding whether to link an archive, shared object, or import library. Do not infer this from the `.a` suffix alone.
+6. Both `rexruntime` and `rexgpu-xenos` are declared `SHARED` in their CMake target definitions. Do not plan to statically link both into the EBOOT merely because the current workflow artifact glob is `*.a`; inspect the real generated filenames and build-tree metadata first.
+7. The Xenos plugin is explicitly runtime-loaded, not linked by consumers. `include/rex/system/gpu_plugin.h` defines `rex::system::LoadGpuPlugin(name, backend)`, the ABI version, and the exported factory symbols. `src/system/gpu_plugin_loader.cpp` loads `librexgpu-xenos.so` from the executable's directory on non-Windows platforms, validates `rex_gpu_abi_version` and `rex_gpu_create`, and returns an `IGraphicsSystem`. The title must stage the matching plugin beside the executable and pass the returned graphics system into `RuntimeConfig::graphics`.
+8. The plugin CMake target links privately against `rexruntime`; its CMake comment explicitly says consumers never link the plugin target and that runtime-loaded plugin binaries are expected. Keep the plugin and runtime ABI-compatible and build them from the same pinned SDK/configuration.
 
 ## Current build gate
 
