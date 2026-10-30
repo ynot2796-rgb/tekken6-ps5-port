@@ -77,6 +77,7 @@ jobs:
         run: |
           set -euo pipefail
           cmake -S .work/reference-sources/rexglue-sdk -B .work/rexglue-ps5-build -G Ninja \
+            -DT6_PORT_ROOT="$GITHUB_WORKSPACE" \
             -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/.work/reference-sources/prospero-recomp-reference/prospero/ps5-toolchain.cmake" \
             -DPS5_PAYLOAD_SDK="$PS5_PAYLOAD_SDK" \
             -DPROSPERO=ON \
