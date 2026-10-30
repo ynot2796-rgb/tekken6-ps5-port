@@ -111,5 +111,6 @@ jobs:
             .work/rexglue-ps5-build.log
             .work/rexglue-ps5-build/CMakeCache.txt
             .work/rexglue-ps5-build/build.ninja
+            .work/reference-sources/rexglue-sdk/out/ps5-amd64/*.a
           if-no-files-found: ignore
           retention-days: 7
