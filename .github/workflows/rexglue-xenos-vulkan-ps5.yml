@@ -105,7 +105,6 @@ jobs:
             -DSDL_STATIC=ON \
             -DSDL_TEST_LIBRARY=OFF \
             -DSDL_TESTS=OFF \
-            # PS5 input is provided by the native Prospero adapter, not SDL BSD USBHID.\
             -DSDL_JOYSTICK=OFF \
             -DSDL_EXAMPLES=OFF \
             -DSDL_X11=OFF \
