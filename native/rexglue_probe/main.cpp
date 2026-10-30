@@ -22,7 +22,7 @@ int main() {
   config.tool_mode = false;
 
   const auto status = runtime.Setup(std::move(config));
-  if (status != X_STATUS_SUCCESS) {
+  if (status != rex::X_STATUS_SUCCESS) {
     runtime.Shutdown();
     return 20;
   }
