@@ -5,6 +5,8 @@ on:
     branches: ["port/initial-scaffold"]
     paths:
       - "tools/patch_rexglue_prospero_cmake.py"
+      - "tools/patch_rexglue_jthread.py"
+      - "tests/test_patch_rexglue_jthread.py"
       - ".github/workflows/rexglue-xenos-vulkan-ps5.yml"
       - "tools/prepare_reference_sources.sh"
       - "patches/**"
