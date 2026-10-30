@@ -103,6 +103,8 @@ jobs:
           cmake --build .work/rexglue-ps5-build --target rexruntime rexgpu-xenos --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log
       - name: Inventory native archives and unresolved references
         if: success()
+        env:
+          PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/bin
         run: |
           set -euo pipefail
           OUT=.work/rexglue-ps5-build/reports
