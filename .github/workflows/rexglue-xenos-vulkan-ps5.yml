@@ -93,7 +93,7 @@ jobs:
             -DSDL_PIPEWIRE=OFF \
             -DSDL_JACK=OFF \
             -DSDL_OSS=OFF \
-            -DCMAKE_CXX_FLAGS="-I$GITHUB_WORKSPACE/native/compat/ps5" \
+            -DCMAKE_CXX_FLAGS="-I$GITHUB_WORKSPACE/native/compat/ps5 -isystem $PS5_PAYLOAD_SDK/target/include/c++/v1 -isystem $PS5_PAYLOAD_SDK/target/include -fPIC -fno-plt -fno-stack-protector -femulated-tls -fvisibility-nodllstorageclass=default -fdenormal-fp-math=ieee -D__PROSPERO__ -DREX_PLATFORM_PROSPERO=1 -fexceptions -fcxx-exceptions -frtti" \
             -DCMAKE_BUILD_TYPE=Release
       - name: Build native ReXGlue runtime and Xenos Vulkan plugin
         env:
