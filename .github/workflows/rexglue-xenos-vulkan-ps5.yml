@@ -72,6 +72,7 @@ jobs:
           set -euo pipefail
           python3 -m venv .work/prospero-venv
           . .work/prospero-venv/bin/activate
+          # Mesa's Meson checks import packaging.version during RADV configuration.
           python -m pip install --disable-pip-version-check 'meson==1.12.1' mako ply PyYAML packaging
           export PATH="$GITHUB_WORKSPACE/.work/prospero-venv/bin:$PATH"
           BUILD_JOBS=2 bash .work/reference-sources/prospero-recomp-reference/prospero/bootstrap.sh
