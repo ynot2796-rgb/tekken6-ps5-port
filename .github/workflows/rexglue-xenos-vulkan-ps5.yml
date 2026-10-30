@@ -26,13 +26,13 @@ permissions:
 jobs:
   compile-rexglue-xenos-vulkan:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - name: Install pinned-target host build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-18 llvm-18 llvm-18-dev llvm-18-tools cmake ninja-build make wget unzip rsync pkg-config
+          sudo apt-get install -y build-essential clang-18 llvm-18 llvm-18-dev llvm-18-tools lld-18 libclang-rt-18-dev cmake ninja-build meson glslang-tools pkg-config git patch rsync wget curl unzip xz-utils python3 python3-venv python3-pip bison flex zlib1g-dev
       - name: Fetch pinned ReXGlue and PS5 reference sources
         run: bash tools/prepare_reference_sources.sh
       - name: Initialize pinned ReXGlue SDK dependencies
@@ -63,6 +63,19 @@ jobs:
           git -C .work/ps5-sdk-git archive FETCH_HEAD | tar -x -C .work/ps5-sdk-export
           bash .work/ps5-sdk-export/platform/tools/setup-sdk.sh \
             "$GITHUB_WORKSPACE/.work/ps5-sdk" "$SDK_REVISION" "$GITHUB_WORKSPACE/.work/ps5-sdk-cache"
+      - name: Bootstrap pinned PS5 RADV and native link dependencies
+        env:
+          PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
+          PROSPERO_DEPS: ${{ github.workspace }}/.work/prospero-deps
+          PS5_LLVM_CONFIG: /usr/bin/llvm-config-18
+        run: |
+          set -euo pipefail
+          python3 -m venv .work/prospero-venv
+          . .work/prospero-venv/bin/activate
+          python -m pip install --disable-pip-version-check 'meson==1.12.1' mako ply PyYAML
+          export PATH="$GITHUB_WORKSPACE/.work/prospero-venv/bin:$PATH"
+          BUILD_JOBS=2 bash .work/reference-sources/prospero-recomp-reference/prospero/bootstrap.sh
+          test -s "$PROSPERO_DEPS/environment.sh"
       - name: Add native ReXGlue runtime/plugin smoke executable
         env:
           T6_PORT_ROOT: ${{ github.workspace }}
@@ -106,9 +119,11 @@ jobs:
       - name: Build native ReXGlue runtime and Xenos Vulkan plugin
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
-          PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          PROSPERO_DEPS: ${{ github.workspace }}/.work/prospero-deps
+          PATH: ${{ github.workspace }}/.work/prospero-venv/bin:/usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
           set -euo pipefail
+          source "$PROSPERO_DEPS/environment.sh"
           cmake --build .work/rexglue-ps5-build --target rexruntime rexgpu-xenos t6_rexglue_probe --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log
       - name: Inventory native archives and unresolved references
         if: success()
