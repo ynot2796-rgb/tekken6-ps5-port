@@ -14,6 +14,7 @@ on:
   pull_request:
     paths:
       - "tools/patch_rexglue_prospero_cmake.py"
+      - "native/compat/ps5/**"
       - ".github/workflows/rexglue-xenos-vulkan-ps5.yml"
       - "tools/prepare_reference_sources.sh"
       - "patches/**"
@@ -92,7 +93,8 @@ jobs:
             -DSDL_PIPEWIRE=OFF \
             -DSDL_JACK=OFF \
             -DSDL_OSS=OFF \
-            -DCMAKE_CXX_FLAGS="-I$GITHUB_WORKSPACE/native/compat/ps5" \\\n            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_CXX_FLAGS="-I$GITHUB_WORKSPACE/native/compat/ps5" \
+            -DCMAKE_BUILD_TYPE=Release
       - name: Build native ReXGlue runtime and Xenos Vulkan plugin
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
