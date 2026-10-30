@@ -63,6 +63,13 @@ jobs:
           git -C .work/ps5-sdk-git archive FETCH_HEAD | tar -x -C .work/ps5-sdk-export
           bash .work/ps5-sdk-export/platform/tools/setup-sdk.sh \
             "$GITHUB_WORKSPACE/.work/ps5-sdk" "$SDK_REVISION" "$GITHUB_WORKSPACE/.work/ps5-sdk-cache"
+      - name: Add native ReXGlue runtime/plugin smoke executable
+        env:
+          T6_PORT_ROOT: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          python3 tools/patch_rexglue_probe_target.py .work/reference-sources/rexglue-sdk
+          grep -nF "add_executable(t6_rexglue_probe" .work/reference-sources/rexglue-sdk/CMakeLists.txt
       - name: Configure ReXGlue runtime and Xenos Vulkan plugin
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
@@ -101,7 +108,7 @@ jobs:
           PATH: /usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
           set -euo pipefail
-          cmake --build .work/rexglue-ps5-build --target rexruntime rexgpu-xenos --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log
+          cmake --build .work/rexglue-ps5-build --target rexruntime rexgpu-xenos t6_rexglue_probe --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log
       - name: Inventory native archives and unresolved references
         if: success()
         run: |
@@ -109,7 +116,7 @@ jobs:
           OUT=.work/rexglue-ps5-build/reports
           LIB=.work/reference-sources/rexglue-sdk/out/ps5-amd64
           mkdir -p "$OUT"
-          find "$LIB" -maxdepth 1 -type f -name '*.a' -printf '%f %s bytes\\n' | sort > "$OUT/archive-manifest.txt"
+          find "$LIB" -maxdepth 1 -type f \\( -name '*.a' -o -name '*.so' -o -name '*.elf' -o -name 't6_rexglue_probe' \\) -printf '%f %s bytes\\n' | sort > "$OUT/archive-manifest.txt"
           for archive in "$LIB"/*.a; do
             name="$(basename "$archive")"
             llvm-ar t "$archive" > "$OUT/$name.members.txt"
@@ -131,5 +138,8 @@ jobs:
             .work/rexglue-ps5-build/CMakeCache.txt
             .work/rexglue-ps5-build/build.ninja
             .work/reference-sources/rexglue-sdk/out/ps5-amd64/*.a
+            .work/reference-sources/rexglue-sdk/out/ps5-amd64/*.so
+            .work/reference-sources/rexglue-sdk/out/ps5-amd64/*.elf
+            .work/reference-sources/rexglue-sdk/out/ps5-amd64/t6_rexglue_probe
           if-no-files-found: ignore
           retention-days: 7
