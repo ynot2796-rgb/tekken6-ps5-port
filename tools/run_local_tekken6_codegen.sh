@@ -33,7 +33,12 @@ git -C "$SDK" submodule update --init --recursive --depth 1
 cmake -S "$SRC" -B "$WORK" -G Ninja \
   -DREXSDK_DIR="$SDK" \
   -DCMAKE_BUILD_TYPE=Release
-cmake --build "$WORK" --target tekken6_codegen --parallel 2
+# The retail image has one 1.36 MB function. ReXGlue defaults to a 1 MiB
+# output budget, so raise its init-only CVar to 2 MiB before launching codegen.
+# This keeps that function in one generated TU instead of warning and forcing
+# an oversized bucket. Override only when deliberately testing another budget.
+REX_MAX_FILE_SIZE_BYTES="${T6_REX_MAX_FILE_SIZE_BYTES:-2097152}" \\
+  cmake --build "$WORK" --target tekken6_codegen --parallel 2
 
 STAMP="$SRC/generated/default/codegen.build.stamp"
 SOURCES="$SRC/generated/default/sources.cmake"
