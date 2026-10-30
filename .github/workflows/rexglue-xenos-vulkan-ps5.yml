@@ -46,7 +46,6 @@ jobs:
           SDK=.work/reference-sources/rexglue-sdk
           git -C "$SDK" apply "$GITHUB_WORKSPACE/patches/rexglue-v0.10.0-ps5.patch"
           git -C "$SDK/thirdparty/FFmpeg" apply "$GITHUB_WORKSPACE/patches/rexglue-ffmpeg-ps5-config.patch"
-          # The pinned PS5 patch already excludes Linux-only X11/Wayland dependencies.
           grep -nF 'if(UNIX AND NOT APPLE AND NOT PS5)' "$SDK/src/ui/CMakeLists.txt"
           python3 tools/patch_rexglue_jthread.py "$SDK"
           python3 tests/test_patch_rexglue_jthread.py
@@ -61,8 +60,7 @@ jobs:
           git -C .work/ps5-sdk-git fetch --depth=1 origin "$SDK_REVISION"
           test "$(git -C .work/ps5-sdk-git rev-parse FETCH_HEAD)" = "$SDK_REVISION"
           git -C .work/ps5-sdk-git archive FETCH_HEAD | tar -x -C .work/ps5-sdk-export
-          bash .work/ps5-sdk-export/platform/tools/setup-sdk.sh \
-            "$GITHUB_WORKSPACE/.work/ps5-sdk" "$SDK_REVISION" "$GITHUB_WORKSPACE/.work/ps5-sdk-cache"
+          bash .work/ps5-sdk-export/platform/tools/setup-sdk.sh "$GITHUB_WORKSPACE/.work/ps5-sdk" "$SDK_REVISION" "$GITHUB_WORKSPACE/.work/ps5-sdk-cache"
       - name: Bootstrap pinned PS5 RADV and native link dependencies
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
@@ -72,18 +70,10 @@ jobs:
           set -euo pipefail
           python3 -m venv .work/prospero-venv
           . .work/prospero-venv/bin/activate
-          # Mesa's Meson checks import packaging.version during RADV configuration.
           python -m pip install --disable-pip-version-check 'meson==1.12.1' mako ply PyYAML packaging
           export PATH="$GITHUB_WORKSPACE/.work/prospero-venv/bin:$PATH"
           BUILD_JOBS=2 bash .work/reference-sources/prospero-recomp-reference/prospero/bootstrap.sh
           test -s "$PROSPERO_DEPS/environment.sh"
-      - name: Add native ReXGlue runtime/plugin smoke executable
-        env:
-          T6_PORT_ROOT: ${{ github.workspace }}
-        run: |
-          set -euo pipefail
-          python3 tools/patch_rexglue_probe_target.py .work/reference-sources/rexglue-sdk
-          grep -nF "add_executable(t6_rexglue_probe" .work/reference-sources/rexglue-sdk/CMakeLists.txt
       - name: Configure ReXGlue runtime and Xenos Vulkan plugin
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
@@ -91,42 +81,26 @@ jobs:
         run: |
           set -euo pipefail
           cmake -S .work/reference-sources/rexglue-sdk -B .work/rexglue-ps5-build -G Ninja \
-            -DT6_PORT_ROOT="$GITHUB_WORKSPACE" \
             -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/.work/reference-sources/prospero-recomp-reference/prospero/ps5-toolchain.cmake" \
             -DPS5_PAYLOAD_SDK="$PS5_PAYLOAD_SDK" \
-            -DPROSPERO=ON \
-            -DPS5=ON \
-            -DREXGLUE_USE_D3D12=OFF \
-            -DREXGLUE_USE_VULKAN=ON \
-            -DREXGLUE_ENABLE_TRACY=OFF \
-            -DREXGLUE_ENABLE_PERF_COUNTERS=OFF \
-            -DREXGLUE_ENABLE_FIDELITYFX=OFF \
-            -DSDL_SHARED=OFF \
-            -DSDL_STATIC=ON \
-            -DSDL_TEST_LIBRARY=OFF \
-            -DSDL_TESTS=OFF \
-            -DSDL_JOYSTICK=OFF \
-            -DSDL_EXAMPLES=OFF \
-            -DSDL_X11=OFF \
-            -DSDL_WAYLAND=OFF \
-            -DSDL_KMSDRM=OFF \
-            -DSDL_DBUS=OFF \
-            -DSDL_ALSA=OFF \
-            -DSDL_PULSEAUDIO=OFF \
-            -DSDL_PIPEWIRE=OFF \
-            -DSDL_JACK=OFF \
-            -DSDL_OSS=OFF \
+            -DPROSPERO=ON -DPS5=ON \
+            -DREXGLUE_USE_D3D12=OFF -DREXGLUE_USE_VULKAN=ON \
+            -DREXGLUE_ENABLE_TRACY=OFF -DREXGLUE_ENABLE_PERF_COUNTERS=OFF -DREXGLUE_ENABLE_FIDELITYFX=OFF \
+            -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_TEST_LIBRARY=OFF -DSDL_TESTS=OFF \
+            -DSDL_JOYSTICK=OFF -DSDL_EXAMPLES=OFF -DSDL_X11=OFF -DSDL_WAYLAND=OFF \
+            -DSDL_KMSDRM=OFF -DSDL_DBUS=OFF -DSDL_ALSA=OFF -DSDL_PULSEAUDIO=OFF \
+            -DSDL_PIPEWIRE=OFF -DSDL_JACK=OFF -DSDL_OSS=OFF \
             -DCMAKE_CXX_FLAGS="-I$GITHUB_WORKSPACE/native/compat/ps5 -isystem $PS5_PAYLOAD_SDK/target/include/c++/v1 -isystem $PS5_PAYLOAD_SDK/target/include -fPIC -fno-plt -fno-stack-protector -femulated-tls -fvisibility-nodllstorageclass=default -fdenormal-fp-math=ieee -D__PROSPERO__ -DREX_PLATFORM_PROSPERO=1 -fexceptions -fcxx-exceptions -frtti" \
             -DCMAKE_BUILD_TYPE=Release
-      - name: Build native ReXGlue runtime and Xenos Vulkan plugin
+      - name: Build native ReXGlue runtime and Xenos Vulkan archives
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
           PROSPERO_DEPS: ${{ github.workspace }}/.work/prospero-deps
-          PATH: ${{ github.workspace }}/.work/prospero-venv/bin:/usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          PATH: ${{ github.workspace }}/.work/prospero-venv/bin:/usr/lib/llvm-18/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/bin
         run: |
           set -euo pipefail
           source "$PROSPERO_DEPS/environment.sh"
-          cmake --build .work/rexglue-ps5-build --target rexruntime rexgpu-xenos t6_rexglue_probe --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log
+          cmake --build .work/rexglue-ps5-build --target rexruntime rexgpu-xenos --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log
       - name: Inventory native archives and unresolved references
         if: success()
         run: |
@@ -134,7 +108,7 @@ jobs:
           OUT=.work/rexglue-ps5-build/reports
           LIB=.work/reference-sources/rexglue-sdk/out/ps5-amd64
           mkdir -p "$OUT"
-          find "$LIB" -maxdepth 1 -type f \\( -name '*.a' -o -name '*.so' -o -name '*.elf' -o -name 't6_rexglue_probe' \\) -printf '%f %s bytes\\n' | sort > "$OUT/archive-manifest.txt"
+          find "$LIB" -maxdepth 1 -type f \( -name '*.a' -o -name '*.so' -o -name '*.elf' \) -printf '%f %s bytes\n' | sort > "$OUT/archive-manifest.txt"
           for archive in "$LIB"/*.a; do
             name="$(basename "$archive")"
             llvm-ar t "$archive" > "$OUT/$name.members.txt"
@@ -142,9 +116,9 @@ jobs:
           done
           llvm-nm -g --defined-only "$LIB/librexruntime.a" "$LIB/librexgpu-xenos.a" > "$OUT/rexglue-defined-symbols.txt"
           llvm-nm -g --undefined-only "$LIB/librexruntime.a" "$LIB/librexgpu-xenos.a" > "$OUT/rexglue-unresolved-symbols.txt" || true
-          printf 'archives=%s\\n' "$(find "$LIB" -maxdepth 1 -name '*.a' | wc -l)" > "$OUT/summary.txt"
-          printf 'runtime_archive_bytes=%s\\n' "$(stat -c %s "$LIB/librexruntime.a")" >> "$OUT/summary.txt"
-          printf 'xenos_archive_bytes=%s\\n' "$(stat -c %s "$LIB/librexgpu-xenos.a")" >> "$OUT/summary.txt"
+          printf 'archives=%s\n' "$(find "$LIB" -maxdepth 1 -name '*.a' | wc -l)" > "$OUT/summary.txt"
+          printf 'runtime_archive_bytes=%s\n' "$(stat -c %s "$LIB/librexruntime.a")" >> "$OUT/summary.txt"
+          printf 'xenos_archive_bytes=%s\n' "$(stat -c %s "$LIB/librexgpu-xenos.a")" >> "$OUT/summary.txt"
           cat "$OUT/summary.txt"
       - name: Preserve configure and compile diagnostics
         if: always()
@@ -155,9 +129,9 @@ jobs:
             .work/rexglue-ps5-build.log
             .work/rexglue-ps5-build/CMakeCache.txt
             .work/rexglue-ps5-build/build.ninja
+            .work/rexglue-ps5-build/reports/
             .work/reference-sources/rexglue-sdk/out/ps5-amd64/*.a
             .work/reference-sources/rexglue-sdk/out/ps5-amd64/*.so
             .work/reference-sources/rexglue-sdk/out/ps5-amd64/*.elf
-            .work/reference-sources/rexglue-sdk/out/ps5-amd64/t6_rexglue_probe
           if-no-files-found: ignore
           retention-days: 7
