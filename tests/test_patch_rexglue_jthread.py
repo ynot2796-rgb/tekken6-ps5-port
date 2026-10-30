@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import importlib.util
 
-script = Path(__file__).with_name("patch_rexglue_jthread.py")
+script = Path(__file__).resolve().parents[1] / "tools" / "patch_rexglue_jthread.py"
 spec = importlib.util.spec_from_file_location("patch_rexglue_jthread", script)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
