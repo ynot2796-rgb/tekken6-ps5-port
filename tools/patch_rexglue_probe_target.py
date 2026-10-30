@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 if len(sys.argv) != 2:
-    raise SystemExit("usage: patch_rexglue_probe_target.py RE XGLUE_SOURCE_ROOT")
+    raise SystemExit("usage: patch_rexglue_probe_target.py REXGLUE_SOURCE_ROOT")
 root = Path(sys.argv[1]).resolve()
 cmake = root / "CMakeLists.txt"
 text = cmake.read_text()
