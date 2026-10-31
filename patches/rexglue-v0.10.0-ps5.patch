@@ -2673,3 +2673,59 @@ index 2251429..b883bf7 100644
  #else
    SDL_PropertiesID props = SDL_GetWindowProperties(sdl_window_);
    if (allowed_types & Surface::kTypeFlag_WaylandSurface) {
+
+
+diff --git a/src/system/gpu_plugin_loader.cpp b/src/system/gpu_plugin_loader.cpp
+index 8c9f1e1..0000000 100644
+--- a/src/system/gpu_plugin_loader.cpp
++++ b/src/system/gpu_plugin_loader.cpp
+@@ -21,6 +21,11 @@
+ #include <rex/platform.h>
+ #include <rex/platform/dynlib.h>
+ 
++#if REX_PLATFORM_PS5
++extern "C" uint32_t rex_gpu_abi_version(void);
++extern "C" rex::system::IGraphicsSystem* rex_gpu_create(
++    uint32_t abi_version, const rex::system::GpuCreateInfo* info);
++#endif
++
+ namespace rex::system {
+ 
+ namespace {
+@@ -57,6 +62,26 @@ }  // namespace
+ 
+ std::unique_ptr<IGraphicsSystem> LoadGpuPlugin(std::string_view name, std::string_view backend) {
++#if REX_PLATFORM_PS5
++  // PS5 title packages do not load a separate GPU shared object. The Xenos
++  // implementation is compiled into the EBOOT as a static archive, so call
++  // its exported factory directly. This preserves the same ABI validation
++  // used by desktop builds without attempting dlopen on an installed title.
++  if (name != "xenos") {
++    REXSYS_ERROR("GPU plugin '{}' is not linked into this PS5 title", name);
++    return nullptr;
++  }
++  const uint32_t plugin_abi = ::rex_gpu_abi_version();
++  if (plugin_abi != kGpuPluginAbiVersion) {
++    REXSYS_ERROR("GPU plugin '{}' has ABI version {}, host expects {}", name, plugin_abi,
++                 kGpuPluginAbiVersion);
++    return nullptr;
++  }
++  std::string backend_str(backend);
++  GpuCreateInfo info{};
++  info.struct_size = sizeof(GpuCreateInfo);
++  info.backend = backend_str.c_str();
++  IGraphicsSystem* graphics_system = ::rex_gpu_create(kGpuPluginAbiVersion, &info);
++  if (!graphics_system) {
++    REXSYS_ERROR("GPU plugin '{}' factory returned no graphics system (backend '{}')", name,
++                 backend_str);
++    return nullptr;
++  }
++  REXSYS_DEBUG("GPU plugin '{}' created from the statically linked PS5 factory", name);
++  return std::unique_ptr<IGraphicsSystem>(graphics_system);
++#else
+   auto path = rex::filesystem::GetExecutableFolder() / PluginFileName(name);
+@@ -103,5 +128,6 @@ std::unique_ptr<IGraphicsSystem> LoadGpuPlugin(std::string_view name, std::string_view backend) {
+   REXSYS_DEBUG("GPU plugin '{}' loaded ({})", name, path.filename().string());
+   return std::unique_ptr<IGraphicsSystem>(graphics_system);
++#endif
+ }
