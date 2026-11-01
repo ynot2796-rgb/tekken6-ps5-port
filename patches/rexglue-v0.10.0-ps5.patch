@@ -2679,7 +2679,7 @@ diff --git a/src/system/gpu_plugin_loader.cpp b/src/system/gpu_plugin_loader.cpp
 index 8c9f1e1..0000000 100644
 --- a/src/system/gpu_plugin_loader.cpp
 +++ b/src/system/gpu_plugin_loader.cpp
-@@ -21,6 +21,11 @@
+@@ -21,6 +21,12 @@
  #include <rex/platform.h>
  #include <rex/platform/dynlib.h>
  
