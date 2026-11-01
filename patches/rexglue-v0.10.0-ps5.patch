@@ -2692,7 +2692,7 @@ index 8c9f1e1..0000000 100644
  namespace rex::system {
  
  namespace {
-@@ -57,6 +62,26 @@ }  // namespace
+@@ -57,3 +62,31 @@ }  // namespace
  
  std::unique_ptr<IGraphicsSystem> LoadGpuPlugin(std::string_view name, std::string_view backend) {
 +#if REX_PLATFORM_PS5
@@ -2724,7 +2724,7 @@ index 8c9f1e1..0000000 100644
 +  return std::unique_ptr<IGraphicsSystem>(graphics_system);
 +#else
    auto path = rex::filesystem::GetExecutableFolder() / PluginFileName(name);
-@@ -103,5 +128,6 @@ std::unique_ptr<IGraphicsSystem> LoadGpuPlugin(std::string_view name, std::string_view backend) {
+@@ -103,5 +136,6 @@ std::unique_ptr<IGraphicsSystem> LoadGpuPlugin(std::string_view name, std::string_view backend) {
    REXSYS_DEBUG("GPU plugin '{}' loaded ({})", name, path.filename().string());
    return std::unique_ptr<IGraphicsSystem>(graphics_system);
 +#endif
