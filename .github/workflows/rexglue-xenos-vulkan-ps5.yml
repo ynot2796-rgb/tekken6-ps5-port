@@ -18,6 +18,7 @@ on:
     paths:
       - "tools/patch_rexglue_prospero_cmake.py"
       - "native/compat/ps5/**"
+      - "native/rexglue_probe/**"
       - "tools/patch_rexglue_probe_target.py"
       - "tests/test_patch_rexglue_probe_target.py"
       - ".github/workflows/rexglue-xenos-vulkan-ps5.yml"
