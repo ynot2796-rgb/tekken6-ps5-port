@@ -112,7 +112,7 @@ jobs:
           set -euo pipefail
           source "$PROSPERO_DEPS/environment.sh"
           cmake --build .work/rexglue-ps5-build --target t6_rexglue_probe --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log
-          test -s .work/reference-sources/rexglue-sdk/out/ps5-amd64/t6_rexglue_probe
+          test -s .work/reference-sources/rexglue-sdk/out/ps5-amd64/t6_rexglue_probe.elf
       - name: Inventory native archives and unresolved references
         if: success()
         env:
