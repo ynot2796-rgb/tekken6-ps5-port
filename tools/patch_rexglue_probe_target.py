@@ -16,6 +16,7 @@ add_executable(t6_rexglue_probe
 # Link the Xenos plugin into the title. Its static target carries the runtime
 # and Vulkan/SPIR-V dependencies; the PS5 loader calls its linked factory.
 target_link_libraries(t6_rexglue_probe PRIVATE rexgpu-xenos)
+set_target_properties(t6_rexglue_probe PROPERTIES SUFFIX ".elf")
 """
 if "add_executable(t6_rexglue_probe" in source:
     if target in source:
