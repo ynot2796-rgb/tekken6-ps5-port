@@ -6,6 +6,8 @@ on:
     paths:
       - "tools/patch_rexglue_prospero_cmake.py"
       - "tools/patch_rexglue_jthread.py"
+      - "tools/patch_rexglue_probe_target.py"
+      - "tests/test_patch_rexglue_probe_target.py"
       - "native/compat/ps5/**"
       - "tests/test_patch_rexglue_jthread.py"
       - ".github/workflows/rexglue-xenos-vulkan-ps5.yml"
@@ -15,6 +17,8 @@ on:
     paths:
       - "tools/patch_rexglue_prospero_cmake.py"
       - "native/compat/ps5/**"
+      - "tools/patch_rexglue_probe_target.py"
+      - "tests/test_patch_rexglue_probe_target.py"
       - ".github/workflows/rexglue-xenos-vulkan-ps5.yml"
       - "tools/prepare_reference_sources.sh"
       - "patches/**"
@@ -49,6 +53,12 @@ jobs:
           grep -nF 'if(UNIX AND NOT APPLE AND NOT PS5)' "$SDK/src/ui/CMakeLists.txt"
           python3 tools/patch_rexglue_jthread.py "$SDK"
           python3 tests/test_patch_rexglue_jthread.py
+      - name: Add native ReXGlue runtime and Xenos factory link probe
+        run: |
+          set -euo pipefail
+          python3 tools/patch_rexglue_probe_target.py .work/reference-sources/rexglue-sdk
+          python3 tests/test_patch_rexglue_probe_target.py
+
       - name: Export pinned PS5 SDK fork
         env:
           SDK_REVISION: b5efad528e0ac1b8289f39d72a0e890ff68ff0a6
@@ -91,6 +101,7 @@ jobs:
             -DSDL_KMSDRM=OFF -DSDL_DBUS=OFF -DSDL_ALSA=OFF -DSDL_PULSEAUDIO=OFF \
             -DSDL_PIPEWIRE=OFF -DSDL_JACK=OFF -DSDL_OSS=OFF \
             -DCMAKE_CXX_FLAGS="-I$GITHUB_WORKSPACE/native/compat/ps5 -isystem $PS5_PAYLOAD_SDK/target/include/c++/v1 -isystem $PS5_PAYLOAD_SDK/target/include -fPIC -fno-plt -fno-stack-protector -femulated-tls -fvisibility-nodllstorageclass=default -fdenormal-fp-math=ieee -D__PROSPERO__ -DREX_PLATFORM_PROSPERO=1 -fexceptions -fcxx-exceptions -frtti" \
+            -DT6_PORT_ROOT="$GITHUB_WORKSPACE" \
             -DCMAKE_BUILD_TYPE=Release
       - name: Build native ReXGlue runtime and Xenos Vulkan archives
         env:
@@ -100,7 +111,8 @@ jobs:
         run: |
           set -euo pipefail
           source "$PROSPERO_DEPS/environment.sh"
-          cmake --build .work/rexglue-ps5-build --target t6_rexglue_probe --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log\n          test -s .work/reference-sources/rexglue-sdk/out/ps5-amd64/t6_rexglue_probe
+          cmake --build .work/rexglue-ps5-build --target t6_rexglue_probe --parallel 2 2>&1 | tee .work/rexglue-ps5-build.log
+          test -s .work/reference-sources/rexglue-sdk/out/ps5-amd64/t6_rexglue_probe
       - name: Inventory native archives and unresolved references
         if: success()
         env:
