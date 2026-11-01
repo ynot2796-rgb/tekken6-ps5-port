@@ -2,7 +2,7 @@
 
 **Pinned source:** ReXGlue SDK `f5337cdc947ff6d4c4196737e2c807a48f2a1fc2`  
 **Purpose:** record the real runtime API and PS5-specific linking contract before writing the Tekken title entry point.  
-**Status:** runtime and Xenos Vulkan static archives compile on the pinned PS5 toolchain; PS5 static-factory loading correction is committed and under CI validation. No Tekken title ELF has linked or booted yet.
+**Status:** runtime and Xenos Vulkan static archives compile on the pinned PS5 toolchain. A native smoke target now links the runtime and static Xenos factory into one PS5 ELF; the link attempt is in CI. No Tekken game ELF has linked or booted yet.
 
 ## Verified runtime API
 
@@ -25,7 +25,7 @@ The public header is `include/rex/runtime.h`. The entry point is the `rex::Runti
 The upstream SDK declares both `rexruntime` and `rexgpu-xenos` as shared targets for desktop platforms. The pinned PS5 patch deliberately changes both to **static** libraries because the installed title is linked into one native executable and must not depend on loading a separate plugin shared object.
 
 The current successful compile workflow confirms the resulting files are static archives:
-- `librexruntime.a` (22,884,098 bytes in run 41145204181)
+- `librexruntime.a` (22,855,206 bytes in run 41267914570)
 - `librexgpu-xenos.a` (8,317,956 bytes in run 41145204181)
 
 This is intentional, but it exposed a mismatch: upstream `src/system/gpu_plugin_loader.cpp` always used `DynamicLibrary::Load` and expected `librexgpu-xenos.so`. That desktop path cannot work with the PS5 static-archive packaging model.
@@ -66,3 +66,13 @@ Desktop builds retain the original dynamic loader. The PS5 link must include bot
 6. Validate module load, first frame, input, audio and shutdown on the user's firmware 13.60 console.
 
 No generated Tekken source, proprietary game asset, game image, Sony runtime module or private credential is part of this audit.
+
+
+## Native runtime + Xenos ELF link probe added — 1 November 2026
+
+- Added `tools/patch_rexglue_probe_target.py` and regression tests to add a native `t6_rexglue_probe.elf` target to the pinned SDK's CMake project.
+- The target links `rexgpu-xenos`, whose static link interface brings in the ReXGlue runtime and Vulkan/SPIR-V dependencies. This is required because the PS5 GPU loader now calls the statically linked `rex_gpu_abi_version` and `rex_gpu_create` factory symbols.
+- The probe entry point calls `LoadGpuPlugin("xenos", "vulkan")`, initializes `rex::Runtime` with empty data paths, then shuts it down. It does not load an XEX or generated PPC mappings and is not a Tekken game executable.
+- The build workflow now invokes the pinned Prospero link adapter with the same SDK/RADV bootstrap, checks for the resulting ELF, and includes it in the build inventory.
+- The renderer-only retry passed on commit `7d79b432`, compiling all 35 Xenos Vulkan renderer object targets.
+- The full link attempt on the latest probe-enabled workflow is still in progress at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/41320963268. No linked ELF is claimed until that run completes and its output is inspected.
