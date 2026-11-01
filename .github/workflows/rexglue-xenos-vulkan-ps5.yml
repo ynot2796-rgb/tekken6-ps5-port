@@ -9,6 +9,7 @@ on:
       - "tools/patch_rexglue_probe_target.py"
       - "tests/test_patch_rexglue_probe_target.py"
       - "native/compat/ps5/**"
+      - "native/rexglue_probe/**"
       - "tests/test_patch_rexglue_jthread.py"
       - ".github/workflows/rexglue-xenos-vulkan-ps5.yml"
       - "tools/prepare_reference_sources.sh"
