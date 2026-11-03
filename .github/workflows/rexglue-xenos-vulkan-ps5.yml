@@ -7,7 +7,9 @@ on:
       - "tools/patch_rexglue_prospero_cmake.py"
       - "tools/patch_rexglue_jthread.py"
       - "tools/patch_rexglue_probe_target.py"
+      - "tools/patch_prospero_large_model_linker.py"
       - "tests/test_patch_rexglue_probe_target.py"
+      - "tests/test_patch_prospero_large_model_linker.py"
       - "native/compat/ps5/**"
       - "native/rexglue_probe/**"
       - "tests/test_patch_rexglue_jthread.py"
@@ -73,6 +75,20 @@ jobs:
           test "$(git -C .work/ps5-sdk-git rev-parse FETCH_HEAD)" = "$SDK_REVISION"
           git -C .work/ps5-sdk-git archive FETCH_HEAD | tar -x -C .work/ps5-sdk-export
           bash .work/ps5-sdk-export/platform/tools/setup-sdk.sh "$GITHUB_WORKSPACE/.work/ps5-sdk" "$SDK_REVISION" "$GITHUB_WORKSPACE/.work/ps5-sdk-cache"
+      - name: Restore pinned PS5 RADV build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .work/prospero-deps/src/sonic-reference/.deps/work/radv-build-ps5-release
+            .work/prospero-deps/src/sonic-reference/.deps/work/radv-clc-build
+            .work/prospero-deps/src/sonic-reference/.deps/work/radv-clc-cache
+            .work/prospero-deps/src/sonic-reference/.deps/work/radv-src
+            .work/prospero-deps/src/sonic-reference/.deps/native/radv-release
+            .work/prospero-deps/radv-display-work
+            .work/prospero-deps/radv-display
+          key: prospero-radv-${{ runner.os }}-sdk-b5efad5-mesa-0b2d6d1a-builder-59e7086
+          restore-keys: |
+            prospero-radv-${{ runner.os }}-sdk-b5efad5-mesa-0b2d6d1a-builder-59e7086
       - name: Bootstrap pinned PS5 RADV and native link dependencies
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
@@ -86,6 +102,15 @@ jobs:
           export PATH="$GITHUB_WORKSPACE/.work/prospero-venv/bin:$PATH"
           BUILD_JOBS=2 bash .work/reference-sources/prospero-recomp-reference/prospero/bootstrap.sh
           test -s "$PROSPERO_DEPS/environment.sh"
+      - name: Patch and test large-model Prospero linker sections
+        env:
+          PROSPERO_DEPS: ${{ github.workspace }}/.work/prospero-deps
+        run: |
+          set -euo pipefail
+          source "$PROSPERO_DEPS/environment.sh"
+          python3 tools/patch_prospero_large_model_linker.py "$SONIC_PS5_REFERENCE"
+          python3 tests/test_patch_prospero_large_model_linker.py
+          grep -Fq '.ltext .ltext.* __lcxx_override' "$SONIC_PS5_REFERENCE/tooling/native/ps5-pie.ld"
       - name: Configure ReXGlue runtime and Xenos Vulkan plugin
         env:
           PS5_PAYLOAD_SDK: ${{ github.workspace }}/.work/ps5-sdk
