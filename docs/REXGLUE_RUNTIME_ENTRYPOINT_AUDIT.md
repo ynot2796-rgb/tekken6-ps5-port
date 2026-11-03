@@ -76,3 +76,11 @@ No generated Tekken source, proprietary game asset, game image, Sony runtime mod
 - The build workflow now invokes the pinned Prospero link adapter with the same SDK/RADV bootstrap, checks for the resulting ELF, and includes it in the build inventory.
 - The renderer-only retry passed on commit `7d79b432`, compiling all 35 Xenos Vulkan renderer object targets.
 - The full link attempt on the latest probe-enabled workflow is still in progress at https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/41320963268. No linked ELF is claimed until that run completes and its output is inspected.
+
+## Latest full Prospero compile result — 3 November 2026
+
+- Run [41562119855](https://github.com/ynot2796-rgb/tekken6-ps5-port/actions/runs/41562119855), commit `40399e38`, completed the ReXGlue runtime and Xenos Vulkan static archive builds. The log reached `librexgpu-xenos.a` and then attempted to compile `t6_rexglue_probe/main.cpp`.
+- The probe compile stopped because `rex/runtime.h` exposes `spdlog/spdlog.h`, but the probe target did not inherit the private static-plugin dependency's public include path. This was a probe target dependency declaration issue, not a ReXGlue runtime or renderer compile failure.
+- The probe target now explicitly links `rexruntime` and `spdlog::spdlog` as well as `rexgpu-xenos` and `fmt`; the regression test checks this contract. The next full CI run verifies the correction.
+- ReXGlue selects `-mcmodel=large` for this x86-64 FreeBSD/Prospero toolchain. The linked reference's base PIE script originally placed only the small-model section names. A guarded patch now adds `.ltext`, `.lrodata`, `.ldata`, `.lbss`, `__lcxx_override`, and `.note.dlopen` to their correct segments. Its tests and workflow integration are committed; the full build has not yet verified the resulting ELF layout.
+- The renderer-only compile and game-runtime adapter contract checks pass on the current branch. No native Tekken ELF or bootable title has been produced.
