@@ -16,7 +16,7 @@ with tempfile.TemporaryDirectory() as tmp:
     patched = cmake.read_text()
     assert "add_executable(t6_rexglue_probe" in patched
     assert "${T6_PORT_ROOT}/native/rexglue_probe/main.cpp" in patched
-    assert "target_link_libraries(t6_rexglue_probe PRIVATE rexgpu-xenos)" in patched
+    assert "target_link_libraries(t6_rexglue_probe PRIVATE rexgpu-xenos fmt)" in patched
     assert 'set_target_properties(t6_rexglue_probe PROPERTIES SUFFIX ".elf")' in patched
     second = subprocess.run(["python3", str(SCRIPT), str(root)], text=True, capture_output=True)
     assert second.returncode == 0, second.stderr
