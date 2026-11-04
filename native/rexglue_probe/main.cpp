@@ -19,7 +19,9 @@ int main() {
   config.tool_mode = false;
 
   const auto status = runtime.Setup(std::move(config));
-  if (status != X_STATUS_SUCCESS) {
+  // X_STATUS_SUCCESS is a macro whose X_STATUS token is not namespace-qualified;
+  // compare the namespaced status value directly to avoid expanding it globally.
+  if (status != 0) {
     runtime.Shutdown();
     return 20;
   }
