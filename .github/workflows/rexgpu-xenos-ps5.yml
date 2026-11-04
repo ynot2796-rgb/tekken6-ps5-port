@@ -101,4 +101,4 @@ jobs:
             exit 2
           fi
           printf 'Compiling %s renderer object targets without linking rexruntime.\n' "${#TARGETS[@]}"
-          ninja -C "$BUILD" --parallel 2 "${TARGETS[@]}"
+          ninja -C "$BUILD" -j 2 "${TARGETS[@]}"
