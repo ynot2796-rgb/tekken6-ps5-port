@@ -30,6 +30,10 @@ Priority change:
 
 See `docs/PS5X360_REUSE_AND_RECOMP_INTEGRATION.md` for the source findings and integration plan, and `docs/PS5X360_COMPONENT_COMPATIBILITY_MATRIX.md` for the audited as-is / adapter-required / incompatible matrix. The matrix is based on the release-pinned native entry point, link script and memory adapter; it explicitly separates Xenia's guest runtime from the native ReXGlue target.
 
+## Additional PS5 engineering reference — 10 November 2026
+
+The MIT-licensed [PrimetimeFluff TTT2 PS5 port](https://github.com/PrimetimeFluff/tekken-tag-tournament2-ps5) has been audited as an engineering reference. We are reusing its staged-build discipline, clean-environment host tests, dependency provenance requirements, fail-closed runtime checks, shader/compiler benchmark methodology, and strict distinction between linking, packaging, and console boot. Its XenonRecomp/DXVK/vkd3d/FFmpeg dependency stack is not a drop-in replacement for Tekken 6's ReXGlue/GGPO architecture. See [TTT2 PS5 engineering reuse audit](docs/TTT2_PS5_REUSE_AUDIT.md). No game binaries, game-derived files, assets, Sony runtime modules, or secrets are being reused.
+
 ## Route selection
 
 **Primary route: native PS5 homebrew title.** The deliverable must be a real title folder registered by ShadowMountPlus, not a Windows executable or a payload-only demo.
